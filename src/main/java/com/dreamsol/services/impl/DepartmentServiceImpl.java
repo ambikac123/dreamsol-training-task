@@ -13,7 +13,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
-import com.dreamsol.dto.DepartmentDto;
+import com.dreamsol.dto.DepartmentRequestDto;
 import com.dreamsol.entities.Department;
 import com.dreamsol.exceptions.ResourceAlreadyExistException;
 import com.dreamsol.exceptions.ResourceNotFoundException;
@@ -31,7 +31,7 @@ public class DepartmentServiceImpl implements DepartmentService
 	@Autowired
 	private ModelMapper modelMapper;
 	
-	public ResponseEntity<ApiResponse> createDepartment(DepartmentDto departmentDto) {
+	public ResponseEntity<ApiResponse> createDepartment(DepartmentRequestDto departmentDto) {
 		try {
 				List<Department> departmentList = departmentRepository.findByName(departmentDto.getDepartmentName());
 				if(departmentList.isEmpty())
@@ -52,7 +52,7 @@ public class DepartmentServiceImpl implements DepartmentService
 		}
 	}
 
-	public ResponseEntity<DepartmentDto> updateDepartment(DepartmentDto departmentDto, Long departmentId) {
+	public ResponseEntity<DepartmentRequestDto> updateDepartment(DepartmentRequestDto departmentDto, Long departmentId) {
 		Department department = departmentRepository.findById(departmentId).orElseThrow(()->new ResourceNotFoundException("Department","Id",departmentId));
 		modelMapper.map(departmentDto,department,"departmentId");
 		
@@ -60,14 +60,14 @@ public class DepartmentServiceImpl implements DepartmentService
 		return ResponseEntity.status(HttpStatus.OK).body(entityToDto(updatedDepartment));
 	}
 	
-	public ResponseEntity<DepartmentDto> deleteDepartment(Long departmentId) {
+	public ResponseEntity<DepartmentRequestDto> deleteDepartment(Long departmentId) {
 		Department department = departmentRepository.findById(departmentId)
 				.orElseThrow(()->new ResourceNotFoundException("Department","Id",departmentId));
 		this.departmentRepository.delete(department);
 		return ResponseEntity.status(HttpStatus.OK).body(entityToDto(department));
 	}
 
-	public ResponseEntity<DepartmentDto> getDepartmentById(Long departmentId) {
+	public ResponseEntity<DepartmentRequestDto> getDepartmentById(Long departmentId) {
 		Department department = departmentRepository.findById(departmentId)
 				.orElseThrow(()->new ResourceNotFoundException("Department","Id",departmentId));
 		return ResponseEntity.status(HttpStatus.OK).body(entityToDto(department));
@@ -85,7 +85,7 @@ public class DepartmentServiceImpl implements DepartmentService
 		Page<Department> page = departmentRepository.findAll(pageable);
 		
 		List<Department> departmentList = page.getContent();
-		List<DepartmentDto> departmentDtoList = departmentList.stream().map((department)->this.entityToDto(department)).collect(Collectors.toList());
+		List<DepartmentRequestDto> departmentDtoList = departmentList.stream().map((department)->this.entityToDto(department)).collect(Collectors.toList());
 		DepartmentAllDataResponse departmentAllDataResponse = new DepartmentAllDataResponse();
 		departmentAllDataResponse.setContents(departmentDtoList);
 		departmentAllDataResponse.setPageNumber(page.getNumber());
@@ -97,7 +97,7 @@ public class DepartmentServiceImpl implements DepartmentService
 		return ResponseEntity.status(HttpStatus.OK).body(departmentAllDataResponse);
 	}
 	
-	public ResponseEntity<List<DepartmentDto>> searchDepartments(String keyword) {
+	public ResponseEntity<List<DepartmentRequestDto>> searchDepartments(String keyword) {
 		
 		List<Department> departmentList = departmentRepository.findByName("%"+keyword+"%");
 		 
@@ -105,19 +105,19 @@ public class DepartmentServiceImpl implements DepartmentService
 		{
 			departmentList = departmentRepository.findByCode("%"+keyword+"%");
 		}
-		List<DepartmentDto> departmentDtoList = departmentList.stream().map((department)-> entityToDto(department)).collect(Collectors.toList());
+		List<DepartmentRequestDto> departmentDtoList = departmentList.stream().map((department)-> entityToDto(department)).collect(Collectors.toList());
 		return ResponseEntity.ok(departmentDtoList);
 	}
 	
-	public Department dtoToEntity(DepartmentDto departmentDto)
+	public Department dtoToEntity(DepartmentRequestDto departmentDto)
 	{
 		Department department = modelMapper.map(departmentDto, Department.class);	
 		return department;
 	}
 	
-	public DepartmentDto entityToDto(Department department)
+	public DepartmentRequestDto entityToDto(Department department)
 	{
-		DepartmentDto departmentDto = modelMapper.map(department, DepartmentDto.class);
+		DepartmentRequestDto departmentDto = modelMapper.map(department, DepartmentRequestDto.class);
 		return departmentDto;
 	}
 	

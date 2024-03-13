@@ -1,6 +1,5 @@
 package com.dreamsol.dto;
 
-import org.springframework.web.multipart.MultipartFile;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.Max;
@@ -28,9 +27,12 @@ public class UserRequestDto
 	@Pattern(regexp = "^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Z|a-z]{2,}$", message = "email must be contain [a-z,A-Z,0-9,%,.,_,-]")
 	private String userEmail;
 	
-	@Min(value = 6000000000L, message = "Mobile number must start with [6-9]")
-    @Max(value = 9999999999L, message = "Mobile number must contain of 10 digits")
+	@Min(value = 6000000000L, message = "Mobile number must start with [6-9] and must have 10 digits")
+    @Max(value = 9999999999L, message = "Mobile number must contain 10 digits")
 	private long userMobile;
+	
+	private UserTypeDto userTypeDto;
+	
 	
 	
 }

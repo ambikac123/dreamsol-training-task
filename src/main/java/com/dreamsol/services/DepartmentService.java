@@ -4,21 +4,21 @@ import java.util.List;
 
 import org.springframework.http.ResponseEntity;
 
-import com.dreamsol.dto.DepartmentDto;
+import com.dreamsol.dto.DepartmentRequestDto;
 import com.dreamsol.response.ApiResponse;
 import com.dreamsol.response.DepartmentAllDataResponse;
 
 public interface DepartmentService
 {
-	ResponseEntity<ApiResponse> createDepartment(DepartmentDto departmentDto);
+	ResponseEntity<ApiResponse> createDepartment(DepartmentRequestDto departmentDto);
 	
-	ResponseEntity<DepartmentDto> updateDepartment(DepartmentDto departmentDto,Long departmentId);
+	ResponseEntity<DepartmentRequestDto> updateDepartment(DepartmentRequestDto departmentDto,Long departmentId);
 	
-	ResponseEntity<DepartmentDto> getDepartmentById(Long departmentId);
+	ResponseEntity<DepartmentRequestDto> getDepartmentById(Long departmentId);
 	
 	ResponseEntity<DepartmentAllDataResponse> getAllDepartments(Integer pageNumber,Integer pageSize, String sortBy,String sortDirection);
 	
-	ResponseEntity<DepartmentDto> deleteDepartment(Long departmentId);
+	ResponseEntity<DepartmentRequestDto> deleteDepartment(Long departmentId);
 
-	ResponseEntity<List<DepartmentDto>> searchDepartments(String keyword);
+	ResponseEntity<List<DepartmentRequestDto>> searchDepartments(String keyword);
 }

@@ -1,13 +1,19 @@
 package com.dreamsol.controllers;
 
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
 
+import javax.imageio.ImageIO;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.StreamUtils;
@@ -16,7 +22,6 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestPart;
@@ -26,6 +31,7 @@ import org.springframework.web.multipart.MultipartFile;
 import com.dreamsol.dto.UserRequestDto;
 import com.dreamsol.dto.UserResponseDto;
 import com.dreamsol.response.ApiResponse;
+import com.dreamsol.response.UserAllDataResponse;
 import com.dreamsol.services.ImageUploadService;
 import com.dreamsol.services.UserService;
 
@@ -37,6 +43,7 @@ import jakarta.validation.Valid;
 @RestController
 @RequestMapping("/api/users")
 @Tag(name = "User", description = "This is user API")
+
 public class UserController 
 {
 	@Autowired private UserService userService;
@@ -59,16 +66,21 @@ public class UserController
 		return userService.createUser(userRequestDto,path,file);
 	}
 	
-	@PutMapping("/update/{userId}")
-	public ResponseEntity<ApiResponse> updateUser(@Valid @RequestBody UserRequestDto userRequestDto, @PathVariable("userId") Long userId)
+	@PutMapping(path = "/update/{userId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+	public ResponseEntity<ApiResponse> updateUser(
+			@Valid 
+			@RequestPart("userDto") UserRequestDto userRequestDto, 
+			@RequestParam("file") MultipartFile file,
+			@PathVariable("userId") Long userId
+	)
 	{
-		return null;
+		return userService.updateUser(userRequestDto,path, file, userId);
 	}
 	
 	@DeleteMapping("/delete/{userId}")
 	public ResponseEntity<ApiResponse> deleteUser(@PathVariable Long userId)
 	{
-		return null;
+		return userService.deleteUser(path,userId);
 	}
 	
 	@GetMapping("/get/{userId}")
@@ -77,19 +89,28 @@ public class UserController
 		return userService.getUser(userId);
 	}
 	
+	// To fetch all user details
 	@GetMapping("/get-all")
-	public ResponseEntity<List<UserResponseDto>> getAllUsers()
+	public ResponseEntity<UserAllDataResponse> getAllUsers(
+			@RequestParam(value = "pageNumber", defaultValue = "0", required = false) Integer pageNumber,
+			@RequestParam(value = "pageSize", defaultValue = "10", required = false) Integer pageSize,
+			@RequestParam(value = "sortBy", defaultValue = "userId", required = false) String sortBy,
+			@RequestParam(value = "sortDirection",defaultValue = "asc", required = false) String sortDirection
+	)
 	{
-		return null;
+		return userService.getAllUsers(pageNumber,pageSize,sortBy,sortDirection);
 	}
 	
-	@GetMapping(value = "/download/{fileName}", produces = MediaType.ALL_VALUE)
-	public void downloadFile(
+	// To download image file
+	@GetMapping(value = "/download/{fileName}" ,produces = MediaType.MULTIPART_FORM_DATA_VALUE)
+	public ResponseEntity<String> downloadFile(
 			@PathVariable("fileName") String fileName, HttpServletResponse response
 	) throws IOException, FileNotFoundException
 	{
-		InputStream resource = imageUploadService.getResource(path,fileName);
-		response.setContentType(MediaType.ALL_VALUE);
-		StreamUtils.copy(resource, response.getOutputStream());
+		
+		return ResponseEntity.ok(imageUploadService.getResource(path, fileName));
+		
 	}
+	
+	
 }

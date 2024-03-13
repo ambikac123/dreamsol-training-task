@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.dreamsol.dto.DepartmentDto;
+import com.dreamsol.dto.DepartmentRequestDto;
 import com.dreamsol.response.ApiResponse;
 import com.dreamsol.response.DepartmentAllDataResponse;
 import com.dreamsol.services.DepartmentService;
@@ -37,7 +37,7 @@ public class DepartmentController
 			description = "It is used to save data into database"
 	)
 	@PostMapping("/create")
-	public ResponseEntity<ApiResponse> createDepartment(@Valid @RequestBody DepartmentDto departmentDto)
+	public ResponseEntity<ApiResponse> createDepartment(@Valid @RequestBody DepartmentRequestDto departmentDto)
 	{
 		return departmentService.createDepartment(departmentDto);
 	}
@@ -47,7 +47,7 @@ public class DepartmentController
 			description = "It is used to modify data into database"
 	)
 	@PutMapping("/update/{deptId}")
-	public ResponseEntity<DepartmentDto> updateDepartment(@Valid @RequestBody DepartmentDto departmentDto,@PathVariable("deptId") Long departmentId)
+	public ResponseEntity<DepartmentRequestDto> updateDepartment(@Valid @RequestBody DepartmentRequestDto departmentDto,@PathVariable("deptId") Long departmentId)
 	{
 		return departmentService.updateDepartment(departmentDto,departmentId);
 	}
@@ -57,7 +57,7 @@ public class DepartmentController
 			description = "It is used to delete data from database"
 	)
 	@DeleteMapping("/delete/{deptId}")
-	public ResponseEntity<DepartmentDto> deleteDepartment(@Valid @PathVariable("deptId") Long departmentId)
+	public ResponseEntity<DepartmentRequestDto> deleteDepartment(@Valid @PathVariable("deptId") Long departmentId)
 	{
 		return departmentService.deleteDepartment(departmentId);
 	}
@@ -67,7 +67,7 @@ public class DepartmentController
 			description = "It is used to retrieve single data from database"
 	)
 	@GetMapping("/get/{deptId}")
-	public ResponseEntity<DepartmentDto> getDepartmentById(@Valid @PathVariable("deptId") Long departmentId)
+	public ResponseEntity<DepartmentRequestDto> getDepartmentById(@Valid @PathVariable("deptId") Long departmentId)
 	{
 		return departmentService.getDepartmentById(departmentId);
 	}
@@ -79,7 +79,7 @@ public class DepartmentController
 	@GetMapping("/get-all")
 	public ResponseEntity<DepartmentAllDataResponse> getAllDepartments(
 			@RequestParam(value = "pageNumber",defaultValue = "0", required = false) Integer pageNumber,
-			@RequestParam(value = "pageSize",defaultValue = "3", required = false) Integer pageSize,
+			@RequestParam(value = "pageSize",defaultValue = "10", required = false) Integer pageSize,
 			@RequestParam(value = "sortBy", defaultValue = "departmentId", required = false) String sortBy,
 			@RequestParam(value = "sortDirection", defaultValue = "asc", required = false) String sortDirection
 	){
@@ -91,7 +91,7 @@ public class DepartmentController
 			description = "It is used to search departments on the basis of department name/code containing given keyword"
 			)
 	@GetMapping("/search/{keywords}")
-	public ResponseEntity<List<DepartmentDto>> searchDepartments(@PathVariable String keywords)
+	public ResponseEntity<List<DepartmentRequestDto>> searchDepartments(@PathVariable String keywords)
 	{
 		return departmentService.searchDepartments(keywords);
 	}

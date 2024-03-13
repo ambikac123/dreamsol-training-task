@@ -1,5 +1,7 @@
 package com.dreamsol.entities;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -7,6 +9,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.Lob;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToOne;
 import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
 import lombok.Getter;
@@ -24,6 +27,7 @@ public class User
 	@GeneratedValue(generator = "user_seq")
 	@SequenceGenerator(name = "user_seq", initialValue = 1001, allocationSize = 1)
 	@Column(name = "user_id")
+	@Schema(hidden = true)
 	private long userId;
 	
 	@Column(name = "user_name", length = 50)
@@ -37,7 +41,7 @@ public class User
 	
 	@Column(name = "user_image",unique = true)
 	private String imageURI;
-	
+
 }
 
 

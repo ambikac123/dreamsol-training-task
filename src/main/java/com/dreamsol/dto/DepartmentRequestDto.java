@@ -1,5 +1,8 @@
 package com.dreamsol.dto;
 
+import com.dreamsol.entities.UserType;
+
+import jakarta.persistence.OneToOne;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
@@ -10,7 +13,7 @@ import lombok.Setter;
 @NoArgsConstructor
 @Getter
 @Setter
-public class DepartmentDto 
+public class DepartmentRequestDto 
 {
 	
 	@NotEmpty(message = "Department name should not be empty")
