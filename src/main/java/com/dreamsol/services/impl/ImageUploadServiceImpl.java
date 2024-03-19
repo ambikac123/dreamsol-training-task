@@ -22,7 +22,7 @@ import com.dreamsol.repositories.UserRepository;
 import com.dreamsol.services.ImageUploadService;
 
 @Service
-public class ImpageUploadServiceImpl implements ImageUploadService
+public class ImageUploadServiceImpl implements ImageUploadService
 {
 
 	@Autowired
