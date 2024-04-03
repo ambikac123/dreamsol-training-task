@@ -1,14 +1,6 @@
 package com.dreamsol.exceptions;
-
-import lombok.Getter;
-import lombok.Setter;
-
-@Getter
-@Setter
 public class ResourceNotFoundException extends RuntimeException
 {
-
-	private static final long serialVersionUID = 1L;
 	String resourceName;
 	String fieldName;
 	long fieldValue;
@@ -17,5 +9,9 @@ public class ResourceNotFoundException extends RuntimeException
 		this.resourceName = resourceName;
 		this.fieldName = fieldName;
 		this.fieldValue = fieldValue;
-	}	
+	}
+	public ResourceNotFoundException(String message)
+	{
+		super(message);
+	}
 }

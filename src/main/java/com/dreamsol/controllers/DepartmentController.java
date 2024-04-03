@@ -1,8 +1,17 @@
 package com.dreamsol.controllers;
 
-import java.util.List;
+import com.dreamsol.dto.DepartmentRequestDto;
+import com.dreamsol.response.ApiResponse;
+import com.dreamsol.response.DepartmentAllDataResponse;
+import com.dreamsol.services.DepartmentService;
+import com.dreamsol.dto.DepartmentResponseDto;
+
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.Min;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.Resource;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -14,86 +23,129 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.dreamsol.dto.DepartmentRequestDto;
-import com.dreamsol.response.ApiResponse;
-import com.dreamsol.response.DepartmentAllDataResponse;
-import com.dreamsol.services.DepartmentService;
-
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.validation.Valid;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/departments")
 @Tag(name = "Department", description = "This is department API")
-public class DepartmentController 
-{
-	@Autowired
-	private DepartmentService departmentService;
-	
+public class DepartmentController {
+    @Autowired
+    private DepartmentService departmentService;
 
-	@Operation(
-			summary = "Create new department",
-			description = "It is used to save data into database"
-	)
-	@PostMapping("/create")
-	public ResponseEntity<ApiResponse> createDepartment(@Valid @RequestBody DepartmentRequestDto departmentDto)
-	{
-		return departmentService.createDepartment(departmentDto);
-	}
-	
-	@Operation(
-			summary = "Update existing department",
-			description = "It is used to modify data into database"
-	)
-	@PutMapping("/update/{deptId}")
-	public ResponseEntity<DepartmentRequestDto> updateDepartment(@Valid @RequestBody DepartmentRequestDto departmentDto,@PathVariable("deptId") Long departmentId)
-	{
-		return departmentService.updateDepartment(departmentDto,departmentId);
-	}
-	
-	@Operation(
-			summary = "delete existing department",
-			description = "It is used to delete data from database"
-	)
-	@DeleteMapping("/delete/{deptId}")
-	public ResponseEntity<DepartmentRequestDto> deleteDepartment(@Valid @PathVariable("deptId") Long departmentId)
-	{
-		return departmentService.deleteDepartment(departmentId);
-	}
-	
-	@Operation(
-			summary = "Getting existing department",
-			description = "It is used to retrieve single data from database"
-	)
-	@GetMapping("/get/{deptId}")
-	public ResponseEntity<DepartmentRequestDto> getDepartmentById(@Valid @PathVariable("deptId") Long departmentId)
-	{
-		return departmentService.getDepartmentById(departmentId);
-	}
-	
-	@Operation(
-			summary = "Getting all departments List",
-			description = "It is used to retrieve all data from database"
-	)
-	@GetMapping("/get-all")
-	public ResponseEntity<DepartmentAllDataResponse> getAllDepartments(
-			@RequestParam(value = "pageNumber",defaultValue = "0", required = false) Integer pageNumber,
-			@RequestParam(value = "pageSize",defaultValue = "10", required = false) Integer pageSize,
-			@RequestParam(value = "sortBy", defaultValue = "departmentId", required = false) String sortBy,
-			@RequestParam(value = "sortDirection", defaultValue = "asc", required = false) String sortDirection
-	){
-		return departmentService.getAllDepartments(pageNumber,pageSize,sortBy,sortDirection);
-	}
-	
-	@Operation(
-			summary = "Search departments containing keywords",
-			description = "It is used to search departments on the basis of department name/code containing given keyword"
-			)
-	@GetMapping("/search/{keywords}")
-	public ResponseEntity<List<DepartmentRequestDto>> searchDepartments(@PathVariable String keywords)
-	{
-		return departmentService.searchDepartments(keywords);
-	}
 
+    @Operation(
+            summary = "Create new department",
+            description = "It is used to save data into database"
+    )
+    @PostMapping("/create")
+    public ResponseEntity<ApiResponse> createDepartment(@Valid @RequestBody DepartmentRequestDto departmentDto) {
+        return departmentService.createDepartment(departmentDto);
+    }
+
+    @Operation(
+            summary = "Update existing department",
+            description = "It is used to modify data into database"
+    )
+    @PutMapping("/update/{deptId}")
+    public ResponseEntity<ApiResponse> updateDepartment(@Valid @RequestBody DepartmentRequestDto departmentDto, @PathVariable("deptId") Long departmentId) {
+        return departmentService.updateDepartment(departmentDto, departmentId);
+    }
+
+    @Operation(
+            summary = "delete existing department",
+            description = "It is used to delete data from database"
+    )
+    @DeleteMapping("/delete/{deptId}")
+    public ResponseEntity<ApiResponse> deleteDepartment(@Valid @PathVariable("deptId") Long departmentId) {
+        return departmentService.deleteDepartment(departmentId);
+    }
+
+    @Operation(
+            summary = "Getting existing department",
+            description = "It is used to retrieve single data from database"
+    )
+    @GetMapping("/get/{deptId}")
+    public ResponseEntity<DepartmentResponseDto> getSingleDepartment(@Valid @PathVariable("deptId") Long departmentId) {
+        return departmentService.getSingleDepartment(departmentId);
+    }
+
+    /*@Operation(
+            summary = "Getting all departments List",
+            description = "It is used to retrieve all data from database"
+    )
+    @GetMapping("/get-all")
+    public ResponseEntity<DepartmentAllDataResponse> getAllDepartments(
+            @RequestParam(value = "pageNumber", defaultValue = "0", required = false) @Min(0) int pageNumber,
+            @RequestParam(value = "pageSize", defaultValue = "10", required = false) @Min(1) int pageSize,
+            @RequestParam(value = "sortBy", defaultValue = "departmentId", required = false)
+            @Pattern(regexp = "(departmentId|departmentName|departmentCode|timeStamp)") String sortBy,
+            @RequestParam(value = "sortDirection", defaultValue = "asc", required = false) String sortDirection
+    ) {
+        return departmentService.getAllDepartments(pageNumber, pageSize, sortBy, sortDirection);
+    }*/
+
+    @Operation(
+            summary = "Search departments containing keywords",
+            description = "It is used to search departments on the basis of department name/code containing given keyword"
+    )
+    @GetMapping("/search")
+    public ResponseEntity<DepartmentAllDataResponse> searchDepartments(
+            @RequestParam(value = "pageNumber", defaultValue = "0", required = false) @Min(0) Integer pageNumber,
+            @RequestParam(value = "pageSize", defaultValue = "10", required = false) @Min(1) Integer pageSize,
+            @RequestParam(value = "sortBy", defaultValue = "departmentId", required = false) String sortBy,
+            @RequestParam(value = "sortDirection", defaultValue = "asc", required = false) String sortDirection,
+            @RequestParam(value = "keywords", defaultValue = "", required = false) String keywords)
+    {
+        return departmentService.searchDepartments(pageNumber,pageSize,sortBy,sortDirection,keywords);
+    }
+
+    @Operation(
+            summary = "Validate excel data and get correct and incorrect list",
+            description = "It is used to upload an excel file for filtering correct and incorrect data"
+    )
+    @PostMapping(value = "/validate-excel-data", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<?> getCorrectAndIncorrectDepartments(@RequestParam("file") MultipartFile file) {
+        return departmentService.getCorrectAndIncorrectDepartmentList(file);
+    }
+    @Operation(
+            summary = "Save list of correct data",
+            description = "This api will help to save the correct data into database"
+    )
+    @PostMapping(value = "/save-correct-list")
+    public ResponseEntity<?> saveCorrectList(@RequestBody List<DepartmentRequestDto> correctList)
+    {
+        return departmentService.saveCorrectList(correctList);
+    }
+
+    @Operation(
+            summary = "Download department data from database as excel",
+            description = "It is used to extract department data from database , store in an excel file and return."
+    )
+    @GetMapping(value = "/download-excel", produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
+    public ResponseEntity<?> downloadDepartmentDataAsExcel()
+    {
+        return departmentService.downloadDataFromDB();
+    }
+
+    @Operation(
+            summary = "Download department auto generated dummy data as excel",
+            description = "It is used to get dummy data for department"
+    )
+    @GetMapping(value = "/download-excel-dummy", produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
+    public ResponseEntity<?> downloadDepartmentDummyDataAsExcel() {
+        return departmentService.downloadDummyData();
+    }
+
+    @Operation(
+            summary = "Download excel sample ",
+            description = "This api provides a sample for excel file to save bulk data"
+    )
+    @GetMapping(value = "/download-excel-sample")
+    public ResponseEntity<Resource> downloadDepartmentExcelSample() {
+        return departmentService.getDepartmentExcelSample();
+    }
 }

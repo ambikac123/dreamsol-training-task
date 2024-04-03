@@ -1,17 +1,16 @@
 package com.dreamsol.entities;
 
-import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.OneToOne;
-import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+
+import java.time.LocalDateTime;
 
 @Entity
 @Getter
@@ -21,18 +20,19 @@ import lombok.Setter;
 public class UserType 
 {
 	@Id
-	@GeneratedValue(generator = "usertype_seq")
-	@SequenceGenerator(name = "usertype_seq", initialValue = 101, allocationSize = 1)
-	@Column(name = "usertype_id")
-	@Schema(hidden = true)
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	@Column(nullable = false)
 	private long userTypeId;
-	
-	// UserTypeName : Normal User/Head of Department/Administrator
-	@Column(name = "usertype_name", length = 50)
+
+	@Column(length = 100,nullable = false,unique = true)
 	private String userTypeName;
-	
-	// UserTypeCode : NOR/ HOD/ ADM
-	@Column(name = "usertype_code", length = 10)
+
+	@Column(length = 100,nullable = false,unique = true)
 	private String userTypeCode;
+
+	private LocalDateTime timeStamp;
+
+	@Column(nullable = false)
+	private boolean status;
 
 }

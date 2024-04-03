@@ -1,28 +1,33 @@
 package com.dreamsol.exceptions;
 
-import java.util.HashMap;
-import java.util.Map;
-
+import com.dreamsol.response.ApiResponse;
+import org.springframework.dao.DataAccessException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
-import com.dreamsol.response.ApiResponse;
+import java.sql.SQLIntegrityConstraintViolationException;
+import java.util.HashMap;
+import java.util.Map;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler 
 {
-	@ExceptionHandler(ResourceNotFoundException.class)
-	public ResponseEntity<ApiResponse> resourceNotFoundExceptionHandler(ResourceNotFoundException ex)
-	{
-		String message = ex.getMessage();
-		ApiResponse apiResponse = new ApiResponse(message,false);
-		return new ResponseEntity<ApiResponse>(apiResponse,HttpStatus.NOT_FOUND);
-	}
-	
+    public ApiResponse apiResponse = new ApiResponse();
+    @ExceptionHandler(ResourceNotFoundException.class)
+    public ResponseEntity<ApiResponse> resourceNotFoundExceptionHandler(ResourceNotFoundException e)
+    {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ApiResponse(e.getMessage(),false));
+    }
+    @ExceptionHandler(ImageNotUploadedException.class)
+    public ResponseEntity<ApiResponse> imageNotUploadedExceptionHandler(ImageNotUploadedException e)
+    {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ApiResponse(e.getMessage(),false));
+    }
 	@ExceptionHandler(MethodArgumentNotValidException.class)
 	public ResponseEntity<Map<String,String>> methodArgumentNotFoundExceptionHandler(MethodArgumentNotValidException ex)
 	{
@@ -32,6 +37,37 @@ public class GlobalExceptionHandler
 			String message = error.getDefaultMessage();
 			errorResponseMap.put(fieldName, message);
 		});
-		return new ResponseEntity<Map<String,String>>(errorResponseMap,HttpStatus.BAD_REQUEST);
+		return new ResponseEntity<>(errorResponseMap,HttpStatus.BAD_REQUEST);
+	}
+
+	@ExceptionHandler(NullPointerException.class)
+	public ResponseEntity<ApiResponse> nullPointerExceptionHandler(NullPointerException e)
+	{
+		apiResponse.setMessage(e.getMessage());
+		apiResponse.setSuccess(false);
+		return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(apiResponse);
+	}
+
+	@ExceptionHandler(HttpMessageNotReadableException.class)
+	public ResponseEntity<ApiResponse> httpMessageNotReadableExceptionHandler(HttpMessageNotReadableException e)
+	{
+		apiResponse.setMessage(e.getMessage());
+		apiResponse.setSuccess(false);
+		return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(apiResponse);
+	}
+
+	@ExceptionHandler(SQLIntegrityConstraintViolationException.class)
+	public ResponseEntity<ApiResponse> sqlIntegrityConstraintViolationExceptionHandler(SQLIntegrityConstraintViolationException e)
+	{
+		apiResponse.setMessage(e.getMessage());
+		apiResponse.setSuccess(false);
+		return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(apiResponse);
+	}
+	@ExceptionHandler(DataAccessException.class)
+	public ResponseEntity<ApiResponse> dataAccessExceptionHandler(DataAccessException e)
+	{
+		apiResponse.setMessage(e.getMessage());
+		apiResponse.setSuccess(false);
+		return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(apiResponse);
 	}
 }

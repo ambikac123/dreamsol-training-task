@@ -5,14 +5,16 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Getter
 @Setter
 @NoArgsConstructor
-public class UserTypeSingleDataResponseDto
+public class UserTypeResponseDto 
 {
 	private String userTypeName;
 	private String userTypeCode;
 	private LocalDateTime timeStamp;
 	private boolean status;
+	//private List<UserSingleDataResponseDto> users;
 }

@@ -1,20 +1,18 @@
 package com.dreamsol.dto;
 
-import com.dreamsol.entities.UserType;
-
-import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.util.List;
+import java.time.LocalDateTime;
 
 @Getter
 @Setter
 @NoArgsConstructor
-public class DepartmentResponseDto 
+public class DepartmentSingleDataResponseDto
 {
 	private String departmentName;
 	private String departmentCode;
-	private List<UserResponseDto> users;
+	private LocalDateTime timeStamp;
+	private boolean status;
 }

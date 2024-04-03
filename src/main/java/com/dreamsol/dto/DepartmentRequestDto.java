@@ -1,8 +1,6 @@
 package com.dreamsol.dto;
 
-import com.dreamsol.entities.UserType;
-
-import jakarta.persistence.OneToOne;
+import com.dreamsol.helpers.GlobalHelper;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
@@ -16,15 +14,17 @@ import lombok.Setter;
 public class DepartmentRequestDto 
 {
 	
-	@NotEmpty(message = "Department name should not be empty")
-	@Size(min = 3, max=50, message = "Department name should contain min of 3 and max of 50 characters")
-	@Pattern(regexp = "^[a-zA-Z- ]+$", message = "UserType name must contain [a-z, A-Z, hiphen(-) and space(' ')] only")
+	@NotEmpty(message = "department name should not be empty")
+	@Size(min = 3, max=100, message = "department name should contain min of 3 and max of 100 characters")
+	@Pattern(regexp = GlobalHelper.REGEX_NAME, message = "department name should contain [a-z, A-Z and space(' ')] and must start with at least 3 letter")
 	private String departmentName;
 	
-	@NotEmpty(message = "Department code should not be empty")
-	@Size(min = 2, max = 5, message = "Departmet code must be of min of 2 and max of 6 characters long")
-	@Pattern(regexp = "^[a-zA-Z-]+$", message = "UserType name must contain [a-z, A-Z, hiphen(-) and space(' ')] only")
+	@NotEmpty(message = "department code should not be empty")
+	@Size(min = 2, max = 7, message = "department code must be of min of 2 and max of 7 characters long")
+	@Pattern(regexp = GlobalHelper.REGEX_CODE, message = "department code can contain [a-z, A-Z, 0-9] and must start with at least 2 letters and followed by maximum 3 digits")
 	private String departmentCode;
+
+	private boolean status;
 	
 }
 

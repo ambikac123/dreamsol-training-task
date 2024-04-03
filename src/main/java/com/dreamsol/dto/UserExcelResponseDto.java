@@ -1,10 +1,16 @@
 package com.dreamsol.dto;
 
-public class AllUsersResponseDto
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
+import java.util.List;
+
+@Getter
+@Setter
+@NoArgsConstructor
+public class UserExcelResponseDto
 {
-    private String userName;
-    private long userMobile;
-    private String userEmail;
-    private String userImage;
-    private StringBuilder status;
+    private List<SingleUserResponseDto> correctUsersList;
+    private List<SingleUserResponseDto> incorrectUsersList;
 }

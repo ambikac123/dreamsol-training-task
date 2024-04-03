@@ -1,20 +1,24 @@
 package com.dreamsol.entities;
 
-import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
-import jakarta.persistence.Lob;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+
+import java.time.LocalDateTime;
+import java.util.List;
 
 @Entity
 @Getter
@@ -24,23 +28,37 @@ import lombok.Setter;
 public class User 
 {
 	@Id
-	@GeneratedValue(generator = "user_seq")
-	@SequenceGenerator(name = "user_seq", initialValue = 1001, allocationSize = 1)
-	@Column(name = "user_id")
-	@Schema(hidden = true)
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private long userId;
 	
-	@Column(name = "user_name", length = 50)
+	@Column(length = 100,nullable = false)
 	private String userName;
 	
-	@Column(name = "user_email", length = 50)
-	private String userEmail;
-	
-	@Column(name = "user_mobile", length = 10, unique = true)
+	@Column(length = 10, unique = true,nullable = false)
 	private long userMobile;
-	
-	@Column(name = "user_image",unique = true)
-	private String imageURI;
+
+	@Column(length = 100,unique = true,nullable = false)
+	private String userEmail;
+
+	private LocalDateTime timeStamp;
+
+	@Column(nullable = false)
+	private boolean status;
+
+	@OneToOne(cascade = CascadeType.ALL)
+	@JoinColumn(name = "userimage_id", unique = true)
+	private UserImage userImage;
+
+	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "usertype_id")
+	private UserType userType;
+
+	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "department_id")
+	private Department department;
+
+	@OneToMany(mappedBy = "user")
+	private List<Document> documentList;
 
 }
 

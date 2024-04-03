@@ -2,8 +2,8 @@ package com.dreamsol.response;
 
 import java.util.List;
 
-import com.dreamsol.dto.UserTypeDto;
-
+import com.dreamsol.dto.UserTypeResponseDto;
+import com.dreamsol.helpers.PageInfo;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -13,11 +13,6 @@ import lombok.Setter;
 @Setter
 public class UserTypeAllDataResponse 
 {
-	private List<UserTypeDto> contents;
-	private int pageNumber;
-	private int pageSize;
-	private long totalElements;
-	private int totalPages;
-	private boolean firstPage;
-	private boolean lastPage;
+	private List<UserTypeResponseDto> contents;
+	private PageInfo pageInfo;
 }

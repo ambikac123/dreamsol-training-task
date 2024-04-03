@@ -2,8 +2,8 @@ package com.dreamsol.response;
 
 import java.util.List;
 
-import com.dreamsol.dto.DepartmentRequestDto;
-
+import com.dreamsol.dto.DepartmentResponseDto;
+import com.dreamsol.helpers.PageInfo;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -13,11 +13,6 @@ import lombok.Setter;
 @Setter
 public class DepartmentAllDataResponse
 {
-	private List<DepartmentRequestDto> contents;
-	private int pageNumber;
-	private int pageSize;
-	private long totalElements;
-	private int totalPages;
-	private boolean firstPage;
-	private boolean lastPage;
+	private List<DepartmentResponseDto> contents;
+	private PageInfo pageInfo;
 }
