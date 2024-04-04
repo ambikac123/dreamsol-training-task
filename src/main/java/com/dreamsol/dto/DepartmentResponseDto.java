@@ -5,6 +5,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Getter
 @Setter
@@ -15,5 +16,5 @@ public class DepartmentResponseDto
 	private String departmentCode;
 	private LocalDateTime timeStamp;
 	private boolean status;
-	//private List<UserSingleDataResponseDto> users;
+	List<UserResponseDto> users;
 }

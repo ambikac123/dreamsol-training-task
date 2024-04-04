@@ -1,5 +1,6 @@
 package com.dreamsol.helpers;
 
+import com.dreamsol.dto.UserResponseDto;
 import com.dreamsol.entities.Department;
 import com.dreamsol.entities.User;
 import com.dreamsol.entities.UserType;
@@ -14,14 +15,17 @@ import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.InputMismatchException;
 import java.util.List;
+import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import com.dreamsol.response.ExcelUploadResponse;
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 @Component
 @NoArgsConstructor
@@ -118,6 +122,20 @@ public class GlobalHelper
     public List<User> getUsers(Department department)
     {
         return userRepository.findAllByDepartment(department);
+    }
+    public UserResponseDto userToUserResponseDto(User user)
+    {
+        UserResponseDto userResponseDto = new UserResponseDto();
+        BeanUtils.copyProperties(user,userResponseDto);
+        if(!Objects.isNull(user.getUserImage()))
+        {
+            String downloadLink = ServletUriComponentsBuilder.fromCurrentContextPath()
+                    .path("/api/users/download-image-file/")
+                    .path(user.getUserImage().getDuplicateImageName())
+                    .toUriString();
+            userResponseDto.setImageName(downloadLink);
+        }
+        return userResponseDto;
     }
     public static <T> ExcelUploadResponse getCorrectAndIncorrectList(List<T> list, Class<T> entityName)
     {

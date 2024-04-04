@@ -13,6 +13,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -67,7 +68,11 @@ public class DocumentServiceImpl implements DocumentService
     {
         DocumentSingleDataResponseDto documentSingleDataResponseDto = new DocumentSingleDataResponseDto();
         BeanUtils.copyProperties(document,documentSingleDataResponseDto);
-        documentSingleDataResponseDto.setDocumentName(document.getDocumentDuplicateName());
+        String downloadLink = ServletUriComponentsBuilder.fromCurrentContextPath()
+                .path("/api/users/download-file/")
+                .path(document.getDocumentDuplicateName())
+                .toUriString();
+        documentSingleDataResponseDto.setDocumentName(downloadLink);
         return documentSingleDataResponseDto;
     }
 }

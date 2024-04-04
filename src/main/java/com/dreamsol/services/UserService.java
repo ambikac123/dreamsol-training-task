@@ -22,7 +22,6 @@ public interface UserService
 	ResponseEntity<ApiResponse> deleteUser(String imagePath,Long userId);
 	ResponseEntity<ApiResponse> updateUser(UserRequestDto userRequestDto, MultipartFile file,String imagePath,Long userId);
 	ResponseEntity<?> getAllUsers(Integer pageNumber, Integer pageSize, String sortBy,String sortDirection,String keywords);
-	//ResponseEntity<ApiResponse> saveUsers(List<UserRequestDto> userRequestDtoList);
 	ResponseEntity<?> getCorrectAndIncorrectUserList(MultipartFile excelFile);
 	ResponseEntity<?> saveCorrectList(List<UserExcelUploadResponse> correctList);
 	ResponseEntity<Resource> downloadUserDataInExcel(String keywords);
@@ -36,9 +35,6 @@ public interface UserService
 
 	User getUser(Long userId);
 	User getUser(UserRequestDto userRequestDto, UserType userType, Department department, UserImage userImage);
-	User getUser(long userMobile,String userEmail);
 	User getUser(UserRequestDto userRequestDto);
 	UserSingleDataResponseDto userToUserSingleDataResponseDto(User user);
-	//User userRequestDtoToUser(UserRequestDto userRequestDto);
-
 }

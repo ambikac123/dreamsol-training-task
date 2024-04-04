@@ -14,8 +14,3 @@ public interface DocumentService
     Document saveDocument(MultipartFile file,String filePath);
     DocumentSingleDataResponseDto documentToDocumentSingleDataResponseDto(Document document);
 }
-/*
-    ResponseEntity<?> updateDocument(MultipartFile file,Long documentId);
-    ResponseEntity<?> deleteDocument(Long documentId);
-    ResponseEntity<Resource> downloadDocument(Long documentId);
-*/

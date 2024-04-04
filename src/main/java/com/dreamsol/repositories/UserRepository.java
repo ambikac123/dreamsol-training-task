@@ -18,8 +18,9 @@ public interface UserRepository extends JpaRepository<User, Long>
     @Query(value = "SELECT * FROM user WHERE user_mobile LIKE %:mobileNo%", nativeQuery = true)
     List<User> findByUserMobileLike(String mobileNo);
 
-    @Query(value = "SELECT * FROM user WHERE user_mobile LIKE %:mobileNo%", nativeQuery = true)
-    Page<User> findByUserMobileLike(String mobileNo,Pageable pageable);
+    @Query("SELECT u FROM User u WHERE u.userMobile LIKE %:mobileNo% ORDER BY u.userId")
+    Page<User> findByUserMobileLikeOrderByUserId(String mobileNo, Pageable pageable);
+
     List<User> findByUserNameLikeOrUserEmailLike(String userName, String userEmail);
     Page<User> findByUserNameLikeOrUserEmailLike(String userName, String userEmail, Pageable pageable);
     List<User> findAllByUserTypeIn(List<UserType> userTypeList);

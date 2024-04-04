@@ -15,7 +15,7 @@ public class UserSingleDataResponseDto
 	private String userName;
 	private String userEmail;
 	private long userMobile;
-	private String imageURI;
+	private String imageName;
 	private LocalDateTime timeStamp;
 	private boolean status;
 	private UserTypeSingleDataResponseDto userType;

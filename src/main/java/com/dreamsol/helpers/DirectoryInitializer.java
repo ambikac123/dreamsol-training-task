@@ -16,21 +16,18 @@ public class DirectoryInitializer
     public String filePath;
 
     @PostConstruct
-    public void init() {
-        File imageDirectory = new File(imagePath);
-        if (!imageDirectory.exists()) {
-            if (imageDirectory.mkdirs()) {
-                System.out.println("Directory created: " + imagePath);
-            } else {
-                System.err.println("Failed to create directory: " + imagePath);
-            }
-        }
-        File fileDirectory = new File(filePath);
-        if (!fileDirectory.exists()) {
-            if (fileDirectory.mkdirs()) {
-                System.out.println("Directory created: " + filePath);
-            } else {
-                System.err.println("Failed to create directory: " + filePath);
+    public void init()
+    {
+        String[] paths = {imagePath,filePath};
+
+        for(String path : paths)
+        {
+            File directory = new File(path);
+            if (!directory.exists())
+            {
+                if (!directory.mkdirs()) {
+                    throw new RuntimeException("Unable to create directory: "+path);
+                }
             }
         }
     }

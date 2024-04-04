@@ -1,8 +1,8 @@
 package com.dreamsol.controllers;
 
 import com.dreamsol.dto.DepartmentRequestDto;
+import com.dreamsol.response.AllDataResponse;
 import com.dreamsol.response.ApiResponse;
-import com.dreamsol.response.DepartmentAllDataResponse;
 import com.dreamsol.services.DepartmentService;
 import com.dreamsol.dto.DepartmentResponseDto;
 
@@ -93,7 +93,7 @@ public class DepartmentController {
             description = "It is used to search departments on the basis of department name/code containing given keyword"
     )
     @GetMapping("/search")
-    public ResponseEntity<DepartmentAllDataResponse> searchDepartments(
+    public ResponseEntity<AllDataResponse> searchDepartments(
             @RequestParam(value = "pageNumber", defaultValue = "0", required = false) @Min(0) Integer pageNumber,
             @RequestParam(value = "pageSize", defaultValue = "10", required = false) @Min(1) Integer pageSize,
             @RequestParam(value = "sortBy", defaultValue = "departmentId", required = false) String sortBy,

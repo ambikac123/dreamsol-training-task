@@ -51,12 +51,11 @@ public class ImageHelper
             throw new ImageNotUploadedException(e.getMessage());
         }
     }
-    public boolean deleteImage(String fileName,String destinationPath)
+    public void deleteImage(String fileName,String destinationPath)
     {
         try {
             Path imagePath = Paths.get(destinationPath, fileName);
             Files.delete(imagePath);
-            return true;
         }catch(IOException e)
         {
             throw new ResourceNotFoundException("Image",fileName,0);

@@ -30,6 +30,7 @@ import com.dreamsol.repositories.DocumentRepository;
 import com.dreamsol.repositories.UserImageRepository;
 import com.dreamsol.repositories.UserRepository;
 import com.dreamsol.repositories.UserTypeRepository;
+import com.dreamsol.response.AllDataResponse;
 import com.dreamsol.response.ExcelUploadResponse;
 import com.dreamsol.response.UserExcelUploadResponse;
 import com.dreamsol.services.DepartmentService;
@@ -58,7 +59,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.dreamsol.exceptions.ResourceNotFoundException;
 import com.dreamsol.response.ApiResponse;
-import com.dreamsol.response.UserAllDataResponse;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 @Service
 @NoArgsConstructor
@@ -178,14 +179,14 @@ public class UserServiceImpl implements UserService
             Pageable pageable = PageRequest.of(pageNumber, pageSize, sort);
 
             Page<User> page = userRepository.findByUserNameLikeOrUserEmailLike("%" + keywords + "%", "%" + keywords + "%",pageable);
-            if(page.getSize()==0)
+            if(page.getTotalElements()==0)
             {
-                page = userRepository.findByUserMobileLike("%"+keywords+"%",pageable);
-                if(page.getSize()==0)
+                page = userRepository.findByUserMobileLikeOrderByUserId("%"+keywords+"%",pageable);
+                if(page.getTotalElements()==0)
                 {
                     List<UserType> userTypeList = userTypeRepository.findByUserTypeNameLikeOrUserTypeCodeLike("%" + keywords + "%", "%" + keywords + "%");
                     page = userRepository.findAllByUserTypeIn(userTypeList,pageable);
-                    if(page.getSize()==0)
+                    if(page.getTotalElements()==0)
                     {
                         List<Department> departmentList = departmentRepository.findByDepartmentNameLikeOrDepartmentCodeLike("%" + keywords + "%", "%" + keywords + "%");
                         page = userRepository.findAllByDepartmentIn(departmentList,pageable);
@@ -195,17 +196,17 @@ public class UserServiceImpl implements UserService
             List<User> userList = page.getContent();
             if(!userList.isEmpty())
             {
-                UserAllDataResponse  userAllDataResponse = new UserAllDataResponse();
+                AllDataResponse allDataResponse = new AllDataResponse();
                 List<UserSingleDataResponseDto> userSingleDataResponseDtoList = userList.stream().map(this::userToUserSingleDataResponseDto).collect(Collectors.toList());
-                userAllDataResponse.setContents(userSingleDataResponseDtoList);
+                allDataResponse.setContents(userSingleDataResponseDtoList);
                 PageInfo pageInfo = new PageInfo(
                         page.getNumber(),
                         page.getSize(),
                         page.getTotalElements(),
                         page.getTotalPages(),
                         page.isFirst(),page.isLast());
-                userAllDataResponse.setPageInfo(pageInfo);
-                return ResponseEntity.status(HttpStatus.OK).body(userAllDataResponse);
+                allDataResponse.setPageInfo(pageInfo);
+                return ResponseEntity.status(HttpStatus.OK).body(allDataResponse);
             }
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ApiResponse("No users list found! ",false));
 
@@ -214,19 +215,6 @@ public class UserServiceImpl implements UserService
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ApiResponse(e.getMessage(),false));
         }
 	}
-
-    /*public ResponseEntity<ApiResponse> saveUsers(List<UserRequestDto> userRequestDtoList)
-    {
-        try
-        {
-            List<User> userList = userRequestDtoList.stream().map(this::userRequestDtoToUser).toList();
-            userRepository.saveAll(userList);
-            return ResponseEntity.status(HttpStatus.CREATED).body(new ApiResponse("All users saved successfully!",true));
-        }catch(Exception e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ApiResponse("Error Occurred: users not saved!, Reason: "+e.getMessage(),false));
-        }
-    }*/
-
     public ResponseEntity<String> getUserImageAsBase64(String imageName,String imagePath)
     {
         byte[] fileBytes = GlobalHelper.getResource(imageName,imagePath);
@@ -359,15 +347,12 @@ public class UserServiceImpl implements UserService
         user.setUserImage(userImage);
         return user;
     }
-    public User getUser(long userMobile,String userEmail)
-    {
-        return userRepository.findByUserMobileAndUserEmail(userMobile,userEmail);
-    }
+
     public User getUser(UserRequestDto userRequestDto)
     {
         long userMobile = userRequestDto.getUserMobile();
         String userEmail = userRequestDto.getUserEmail();
-        return getUser(userMobile,userEmail);
+        return userRepository.findByUserMobileAndUserEmail(userMobile,userEmail);
     }
     public UserSingleDataResponseDto userToUserSingleDataResponseDto(User user)
     {
@@ -375,9 +360,13 @@ public class UserServiceImpl implements UserService
         {
             UserSingleDataResponseDto userSingleDataResponseDto = new UserSingleDataResponseDto();
             BeanUtils.copyProperties(user, userSingleDataResponseDto);
-            if(!Objects.isNull(user.getUserImage()))
-                userSingleDataResponseDto.setImageURI(user.getUserImage().getDuplicateImageName());
-
+            if(!Objects.isNull(user.getUserImage())) {
+                String downloadLink = ServletUriComponentsBuilder.fromCurrentContextPath()
+                        .path("/api/users/download-image-file/")
+                        .path(user.getUserImage().getDuplicateImageName())
+                        .toUriString();
+                userSingleDataResponseDto.setImageName(downloadLink);
+            }
             if(!Objects.isNull(user.getUserType()))
             {
                 UserTypeSingleDataResponseDto userTypeSingleDataResponseDto = new UserTypeSingleDataResponseDto();
@@ -404,17 +393,6 @@ public class UserServiceImpl implements UserService
             throw new RuntimeException(e.getMessage());
         }
     }
-   /* public User userRequestDtoToUser(UserRequestDto userRequestDto)
-    {
-        User user = new User();
-        BeanUtils.copyProperties(userRequestDto,user);
-
-        user.setUserType(userTypeService.getUserType(userRequestDto.getUserType()));
-
-        user.setDepartment(departmentService.getDepartment(userRequestDto.getDepartment()));
-
-        return user;
-    }*/
     public User userExcelUploadResponseToUser(UserExcelUploadResponse userExcelUploadResponse)
     {
         User user = new User();

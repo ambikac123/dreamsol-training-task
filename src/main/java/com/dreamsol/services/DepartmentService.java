@@ -3,8 +3,8 @@ package com.dreamsol.services;
 import com.dreamsol.dto.DepartmentResponseDto;
 import com.dreamsol.dto.DepartmentRequestDto;
 import com.dreamsol.entities.Department;
+import com.dreamsol.response.AllDataResponse;
 import com.dreamsol.response.ApiResponse;
-import com.dreamsol.response.DepartmentAllDataResponse;
 
 import org.springframework.core.io.Resource;
 import org.springframework.http.ResponseEntity;
@@ -18,7 +18,7 @@ public interface DepartmentService
 	ResponseEntity<ApiResponse> updateDepartment(DepartmentRequestDto departmentDto,Long departmentId);
 	ResponseEntity<ApiResponse> deleteDepartment(Long departmentId);
 	ResponseEntity<DepartmentResponseDto> getSingleDepartment(Long departmentId);
-	ResponseEntity<DepartmentAllDataResponse> searchDepartments(Integer pageNumber,Integer pageSize,String sortBy,String sortDirection,String keyword);
+	ResponseEntity<AllDataResponse> searchDepartments(Integer pageNumber, Integer pageSize, String sortBy, String sortDirection, String keyword);
 	ResponseEntity<?> getCorrectAndIncorrectDepartmentList(MultipartFile file);
 	ResponseEntity<?> saveCorrectList(List<DepartmentRequestDto> correctList);
 	ResponseEntity<?> downloadDataFromDB();

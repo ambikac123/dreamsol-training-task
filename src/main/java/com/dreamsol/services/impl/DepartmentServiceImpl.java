@@ -8,13 +8,14 @@ import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import com.dreamsol.dto.UserResponseDto;
 import com.dreamsol.entities.User;
 import com.dreamsol.helpers.ExcelHeadersInfo;
 import com.dreamsol.helpers.ExcelHelper;
 import com.dreamsol.helpers.GlobalHelper;
+import com.dreamsol.response.AllDataResponse;
 import com.dreamsol.response.DepartmentExcelUploadResponse;
 import com.dreamsol.response.ExcelUploadResponse;
-import com.dreamsol.services.UserService;
 import com.dreamsol.threads.DepartmentDataSaveThread;
 import lombok.AllArgsConstructor;
 import org.springframework.beans.BeanUtils;
@@ -39,7 +40,6 @@ import com.dreamsol.entities.Department;
 import com.dreamsol.exceptions.ResourceNotFoundException;
 import com.dreamsol.repositories.DepartmentRepository;
 import com.dreamsol.response.ApiResponse;
-import com.dreamsol.response.DepartmentAllDataResponse;
 import com.dreamsol.services.DepartmentService;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -53,7 +53,8 @@ public class DepartmentServiceImpl implements DepartmentService
 	public ResponseEntity<ApiResponse> createDepartment(DepartmentRequestDto departmentRequestDto)
 	{
 		try {
-			if (!isDepartmentExist(departmentRequestDto)) {
+			if (!isDepartmentExist(departmentRequestDto))
+			{
 				Department department = new Department();
 				BeanUtils.copyProperties(departmentRequestDto,department);
 				department.setTimeStamp(LocalDateTime.now());
@@ -99,7 +100,8 @@ public class DepartmentServiceImpl implements DepartmentService
 	}
 	public ResponseEntity<DepartmentResponseDto> getSingleDepartment(Long departmentId)
 	{
-		try{
+		try
+		{
 			Department department = getDepartment(departmentId);
 			DepartmentResponseDto departmentResponseDto = departmentToDepartmentResponseDto(department);
 			return ResponseEntity.status(HttpStatus.OK).body(departmentResponseDto);
@@ -108,29 +110,7 @@ public class DepartmentServiceImpl implements DepartmentService
 			throw new ResourceNotFoundException("department","departmentId",departmentId);
 		}
 	}
-	/*public ResponseEntity<DepartmentAllDataResponse> getAllDepartments(int pageNumber, int pageSize,String sortBy,String sortDirection)
-	{
-		Sort sort = sortDirection.equalsIgnoreCase("asc")?Sort.by(sortBy).ascending():Sort.by(sortBy).descending();
-
-		Pageable pageable = PageRequest.of(pageNumber,pageSize,sort);
-		Page<Department> page = departmentRepository.findAll(pageable);
-
-		List<Department> departmentList = page.getContent();
-		if(departmentList.isEmpty())
-			throw new ResourceNotFoundException("No contents available!");
-		List<DepartmentResponseDto> departmentResponseDtoList = departmentList.stream().map(this::departmentToDepartmentResponseDto).toList();
-		DepartmentAllDataResponse departmentAllDataResponse = new DepartmentAllDataResponse();
-		departmentAllDataResponse.setContents(departmentResponseDtoList);
-		PageInfoHelper pageInfoHelper = new PageInfoHelper(
-				page.getNumber(),
-				page.getSize(),
-				page.getTotalElements(),
-				page.getTotalPages(),
-				page.isFirst(),page.isLast());
-		departmentAllDataResponse.setPageInfo(pageInfoHelper);
-		return ResponseEntity.status(HttpStatus.OK).body(departmentAllDataResponse);
-	}*/
-	public ResponseEntity<DepartmentAllDataResponse> searchDepartments(Integer pageNumber,Integer pageSize,String sortBy,String sortDirection,String keywords)
+	public ResponseEntity<AllDataResponse> searchDepartments(Integer pageNumber,Integer pageSize,String sortBy,String sortDirection,String keywords)
 	{
 		Sort sort = sortDirection.equalsIgnoreCase("asc")?Sort.by(sortBy).ascending():Sort.by(sortBy).descending();
 
@@ -140,16 +120,16 @@ public class DepartmentServiceImpl implements DepartmentService
 		if(departmentList.isEmpty())
 			throw new ResourceNotFoundException("No contents available!");
 		List<DepartmentResponseDto> departmentResponseDtoList = departmentList.stream().map(this::departmentToDepartmentResponseDto).toList();
-		DepartmentAllDataResponse departmentAllDataResponse = new DepartmentAllDataResponse();
-		departmentAllDataResponse.setContents(departmentResponseDtoList);
+		AllDataResponse allDataResponse = new AllDataResponse();
+		allDataResponse.setContents(departmentResponseDtoList);
 		PageInfo pageInfo = new PageInfo(
 				page.getNumber(),
 				page.getSize(),
 				page.getTotalElements(),
 				page.getTotalPages(),
 				page.isFirst(),page.isLast());
-		departmentAllDataResponse.setPageInfo(pageInfo);
-		return ResponseEntity.status(HttpStatus.OK).body(departmentAllDataResponse);
+		allDataResponse.setPageInfo(pageInfo);
+		return ResponseEntity.status(HttpStatus.OK).body(allDataResponse);
 	}
 	public ResponseEntity<?> getCorrectAndIncorrectDepartmentList(MultipartFile file)
 	{
@@ -277,11 +257,11 @@ public class DepartmentServiceImpl implements DepartmentService
 	{
 		DepartmentResponseDto departmentResponseDto = new DepartmentResponseDto();
 		BeanUtils.copyProperties(department,departmentResponseDto);
-		/*List<UserSingleDataResponseDto> userSingleDataResponseDtoListList = userService.getUsers(department)
+		List<UserResponseDto> userResponseDtoList = globalHelper.getUsers(department)
 				.stream()
-				.map((user)->globalHelper.userToUserSingleDataResponseDto(user))
+				.map((user)->globalHelper.userToUserResponseDto(user))
 				.toList();
-		departmentResponseDto.setUsers(userSingleDataResponseDtoListList);*/
+		departmentResponseDto.setUsers(userResponseDtoList);
 		return departmentResponseDto;
 	}
 	public Department getDepartment(String departmentName, String departmentCode)

@@ -16,5 +16,5 @@ public class UserTypeResponseDto
 	private String userTypeCode;
 	private LocalDateTime timeStamp;
 	private boolean status;
-	//private List<UserSingleDataResponseDto> users;
+	List<UserResponseDto> users;
 }

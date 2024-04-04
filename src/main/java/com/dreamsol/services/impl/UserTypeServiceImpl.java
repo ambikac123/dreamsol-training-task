@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
+import com.dreamsol.dto.UserResponseDto;
 import com.dreamsol.dto.UserTypeResponseDto;
 import com.dreamsol.entities.User;
 import com.dreamsol.exceptions.ResourceAlreadyExistException;
@@ -13,9 +14,9 @@ import com.dreamsol.helpers.ExcelHeadersInfo;
 import com.dreamsol.helpers.ExcelHelper;
 import com.dreamsol.helpers.GlobalHelper;
 import com.dreamsol.helpers.PageInfo;
+import com.dreamsol.response.AllDataResponse;
 import com.dreamsol.response.ExcelUploadResponse;
 import com.dreamsol.response.UserTypeExcelUploadResponse;
-import com.dreamsol.services.UserService;
 import lombok.AllArgsConstructor;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -36,7 +37,6 @@ import com.dreamsol.entities.UserType;
 import com.dreamsol.exceptions.ResourceNotFoundException;
 import com.dreamsol.repositories.UserTypeRepository;
 import com.dreamsol.response.ApiResponse;
-import com.dreamsol.response.UserTypeAllDataResponse;
 import com.dreamsol.services.UserTypeService;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -99,39 +99,15 @@ public class UserTypeServiceImpl implements UserTypeService
 	{
 		try{
 			UserType userType = getUserType(userTypeId);
-			UserTypeResponseDto userTypeResponseDto = entityToDto(userType);
+			UserTypeResponseDto userTypeResponseDto = userTypeToUserTypeResponseDto(userType);
 			return ResponseEntity.status(HttpStatus.OK).body(userTypeResponseDto);
 		}catch(Exception e){
 			throw new ResourceNotFoundException("usertype","userTypeId",userTypeId);
 		}
 	}
 
-	// Code to get list of all user types
-	/*public ResponseEntity<UserTypeAllDataResponse> getAllUserTypes(Integer pageNumber, Integer pageSize, String sortBy, String sortDirection)
-	{
-		Sort sort = sortDirection.equalsIgnoreCase("asc")?Sort.by(sortBy).ascending():Sort.by(sortBy).descending();
-
-		Pageable pageable = PageRequest.of(pageNumber,pageSize, sort);
-		Page<UserType> page = userTypeRepository.findAll(pageable);
-		
-		List<UserType> userTypeList = page.getContent();
-		if(userTypeList.isEmpty())
-			throw new ResourceNotFoundException("No contents available!");
-		List<UserTypeResponseDto> userTypeResponseDtoList = userTypeList.stream().map(this::entityToDto).collect(Collectors.toList());
-		UserTypeAllDataResponse userTypeAllDataResponse = new UserTypeAllDataResponse();
-		userTypeAllDataResponse.setContents(userTypeResponseDtoList);
-		PageInfoHelper pageInfoHelper = new PageInfoHelper(
-				page.getNumber(),
-				page.getSize(),
-				page.getTotalElements(),
-				page.getTotalPages(),
-				page.isFirst(),page.isLast());
-		userTypeAllDataResponse.setPageInfo(pageInfoHelper);
-		return ResponseEntity.status(HttpStatus.OK).body(userTypeAllDataResponse);
-	}*/
-
 	// Code to filter list of User Types using keywords
-	public ResponseEntity<UserTypeAllDataResponse> searchUserTypes(Integer pageNumber, Integer pageSize, String sortBy, String sortDirection,String keywords)
+	public ResponseEntity<AllDataResponse> searchUserTypes(Integer pageNumber, Integer pageSize, String sortBy, String sortDirection, String keywords)
 	{
 		Sort sort = sortDirection.equalsIgnoreCase("asc")?Sort.by(sortBy).ascending():Sort.by(sortBy).descending();
 
@@ -139,17 +115,17 @@ public class UserTypeServiceImpl implements UserTypeService
 		Page<UserType> page = userTypeRepository.findByUserTypeNameLikeOrUserTypeCodeLike("%"+keywords+"%","%"+keywords+"%",pageable);
 		List<UserType> userTypeList = page.getContent();
 		List<UserTypeResponseDto> userTypeResponseDtoList = userTypeList.stream()
-				.map(this::entityToDto).toList();
-		UserTypeAllDataResponse userTypeAllDataResponse = new UserTypeAllDataResponse();
-		userTypeAllDataResponse.setContents(userTypeResponseDtoList);
+				.map(this::userTypeToUserTypeResponseDto).toList();
+		AllDataResponse allDataResponse = new AllDataResponse();
+		allDataResponse.setContents(userTypeResponseDtoList);
 		PageInfo pageInfo = new PageInfo(
 			page.getNumber(),
 			page.getSize(),
 			page.getTotalElements(),
 			page.getTotalPages(),
 			page.isFirst(),page.isLast());
-		userTypeAllDataResponse.setPageInfo(pageInfo);
-		return ResponseEntity.status(HttpStatus.OK).body(userTypeAllDataResponse);
+		allDataResponse.setPageInfo(pageInfo);
+		return ResponseEntity.status(HttpStatus.OK).body(allDataResponse);
 	}
 
 	public ResponseEntity<?> getCorrectAndIncorrectUserTypeList(MultipartFile excelFile)
@@ -205,7 +181,7 @@ public class UserTypeServiceImpl implements UserTypeService
 	{
 		Map<String,String> headers = ExcelHeadersInfo.getUserTypeHeadersMap();
 
-		Map<String,String>  headersType = ExcelHeadersInfo.getUserTypeHeadersMap();
+		Map<String,String>  headersType = ExcelHeadersInfo.getUserTypeHeaderTypeMap();
 
 		Map<String,String> examples = ExcelHeadersInfo.getUserTypeDataExampleMap();
 
@@ -233,15 +209,14 @@ public class UserTypeServiceImpl implements UserTypeService
 	{
 		return userTypeRepository.findByUserTypeNameAndUserTypeCode(userTypeName,userTypeCode);
 	}
-	public UserTypeResponseDto entityToDto(UserType userType)
+	public UserTypeResponseDto userTypeToUserTypeResponseDto(UserType userType)
 	{
 		UserTypeResponseDto userTypeResponseDto = new UserTypeResponseDto();
 		BeanUtils.copyProperties(userType,userTypeResponseDto);
-		/*List<User> userList = new ArrayList<>();
-		List<UserSingleDataResponseDto> userSingleDataResponseDtoList = userList.stream()
-				.map(globalHelper::userToUserSingleDataResponseDto)
+		List<UserResponseDto> userResponseDtoList = globalHelper.getUsers(userType).stream()
+				.map(globalHelper::userToUserResponseDto)
 				.toList();
-		userTypeResponseDto.setUsers(userSingleDataResponseDtoList);*/
+		userTypeResponseDto.setUsers(userResponseDtoList);
 		return userTypeResponseDto;
 	}
 	public UserType userTypeRequestDtoToUserType(UserTypeRequestDto userTypeRequestDto)

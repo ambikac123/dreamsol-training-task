@@ -2,8 +2,8 @@ package com.dreamsol.controllers;
 
 import java.util.List;
 
-import com.dreamsol.helpers.ImageHelper;
 import com.dreamsol.response.UserExcelUploadResponse;
+import io.swagger.v3.oas.annotations.Hidden;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
@@ -32,12 +32,12 @@ import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/api/users")
-@Tag(name = "User", description = "This is user API")
+@Tag(name = "USER REST API", description = "This API handles all required operation related to user entity")
 @Validated
 public class UserController 
 {
 	@Autowired private UserService userService;
-	@Autowired private ImageHelper imageHelper;
+
 	@Value("${project.image}")
 	private String imagePath;
 
@@ -46,7 +46,7 @@ public class UserController
 
     @Operation(
 		summary = "Create a new user",
-		description = "It is used to save user data with image into database"
+		description = "It is used to create new user data with image into database"
 	)
 	@PostMapping(path = "/create", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
 	public ResponseEntity<ApiResponse> createUser(
@@ -134,6 +134,7 @@ public class UserController
 			description = "This api helps to download an image as file"
 	)
 	@GetMapping(value = "/download-image-file/{imageName}")
+	@Hidden
 	public ResponseEntity<Resource> downloadImageFile(@PathVariable("imageName") String imageName)
 	{
 		return userService.downloadUserImageAsFile(imageName,imagePath);

@@ -1,6 +1,7 @@
 package com.dreamsol.controllers;
 
 import com.dreamsol.dto.UserTypeResponseDto;
+import com.dreamsol.response.AllDataResponse;
 import jakarta.validation.constraints.Min;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
@@ -18,7 +19,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.dreamsol.dto.UserTypeRequestDto;
 import com.dreamsol.response.ApiResponse;
-import com.dreamsol.response.UserTypeAllDataResponse;
 import com.dreamsol.services.UserTypeService;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -95,7 +95,7 @@ public class UserTypeController
 			description = "It is used to search usertypes on the basis of usertype name/code containing given keyword"
 			)
 	@GetMapping("/search")
-	public ResponseEntity<UserTypeAllDataResponse> searchUserTypes(
+	public ResponseEntity<AllDataResponse> searchUserTypes(
 			@RequestParam(value = "pageNumber", defaultValue = "0", required = false) @Min(0) Integer pageNumber,
 			@RequestParam(value = "pageSize", defaultValue = "10", required = false) @Min(1) Integer pageSize,
 			@RequestParam(value = "sortBy", defaultValue = "userTypeId", required = false) String sortBy,
