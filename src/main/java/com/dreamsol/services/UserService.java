@@ -21,10 +21,10 @@ public interface UserService
 	ResponseEntity<?> getSingleUser(Long userId);
 	ResponseEntity<ApiResponse> deleteUser(String imagePath,Long userId);
 	ResponseEntity<ApiResponse> updateUser(UserRequestDto userRequestDto, MultipartFile file,String imagePath,Long userId);
-	ResponseEntity<?> getAllUsers(Integer pageNumber, Integer pageSize, String sortBy,String sortDirection,String keywords);
+	ResponseEntity<?> getAllUsers(Integer pageNumber, Integer pageSize, String sortBy,String sortDirection,String searchBy,String keywords);
 	ResponseEntity<?> getCorrectAndIncorrectUserList(MultipartFile excelFile);
 	ResponseEntity<?> saveCorrectList(List<UserExcelUploadResponse> correctList);
-	ResponseEntity<Resource> downloadUserDataInExcel(String keywords);
+	ResponseEntity<Resource> downloadUserDataInExcel(String searchBy,String keywords);
 	ResponseEntity<String> getUserImageAsBase64(String imageName,String imagePath);
 	ResponseEntity<Resource> downloadUserImageAsFile(String imageName, String imagePath);
 	ResponseEntity<?> uploadUserDocument(MultipartFile anyFile,String filePath,Long userId);

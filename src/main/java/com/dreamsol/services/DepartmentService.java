@@ -34,11 +34,7 @@ public interface DepartmentService
 
     Department getDepartment(String departmentName, String departmentCode);
 
-	/*
-	List<Department> getDepartments(String keywords);
-	Department dtoToEntity(DepartmentRequestDto departmentRequestDto);
-	DepartmentSingleDataResponseDto departmentToDepartmentSingleDataResponseDto(Department department);
-	ResponseEntity<DepartmentAllDataResponse> getAllDepartments(int pageNumber,int pageSize, String sortBy,String sortDirection);
-	*/
-
+	/*boolean isExistName(String name);
+	boolean isExistCode(String code);
+	boolean isActive(boolean status);*/
 }

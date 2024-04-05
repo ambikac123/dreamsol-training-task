@@ -107,7 +107,7 @@ public class UserTypeServiceImpl implements UserTypeService
 	}
 
 	// Code to filter list of User Types using keywords
-	public ResponseEntity<AllDataResponse> searchUserTypes(Integer pageNumber, Integer pageSize, String sortBy, String sortDirection, String keywords)
+	public ResponseEntity<AllDataResponse> getAllUserTypes(Integer pageNumber, Integer pageSize, String sortBy, String sortDirection, String keywords)
 	{
 		Sort sort = sortDirection.equalsIgnoreCase("asc")?Sort.by(sortBy).ascending():Sort.by(sortBy).descending();
 
@@ -137,7 +137,7 @@ public class UserTypeServiceImpl implements UserTypeService
 		Map<String,String> headersMap = ExcelHeadersInfo.getUserTypeHeadersMap();
 		ExcelHelper<UserTypeExcelUploadResponse> excelHelper = new ExcelHelper<>();
 		List<UserTypeExcelUploadResponse> list = excelHelper.convertExcelToList(excelFile,headersMap,UserTypeExcelUploadResponse.class);
-		ExcelUploadResponse excelUploadResponse = GlobalHelper.getCorrectAndIncorrectList(list,UserTypeExcelUploadResponse.class);
+		ExcelUploadResponse excelUploadResponse = globalHelper.getCorrectAndIncorrectList(list,UserTypeExcelUploadResponse.class);
 		return ResponseEntity.ok(excelUploadResponse);
 	}
 

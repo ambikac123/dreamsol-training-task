@@ -18,7 +18,7 @@ public interface UserTypeService
 	ResponseEntity<ApiResponse> updateUserType(UserTypeRequestDto userTypeRequestDto,Long userTypeId);
 	ResponseEntity<ApiResponse> deleteUserType(Long userTypeId);
 	ResponseEntity<UserTypeResponseDto> getSingleUserType(Long userTypeId);
-	ResponseEntity<AllDataResponse> searchUserTypes(Integer pageNumber, Integer pageSize, String sortBy, String sortDirection, String keywords);
+	ResponseEntity<AllDataResponse> getAllUserTypes(Integer pageNumber, Integer pageSize, String sortBy, String sortDirection, String keywords);
 	ResponseEntity<?> getCorrectAndIncorrectUserTypeList(MultipartFile excelFile);
 	ResponseEntity<?> saveCorrectList(List<UserTypeRequestDto> correctList);
 	ResponseEntity<?> downloadDataFromDB();

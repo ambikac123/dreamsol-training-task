@@ -13,4 +13,8 @@ public interface DepartmentRepository extends JpaRepository<Department,Long>
 	Department findByDepartmentNameAndDepartmentCode(String departmentName, String departmentCode);
 	List<Department> findByDepartmentNameLikeOrDepartmentCodeLike(String departmentName, String departmentCode);
 	Page<Department> findByDepartmentNameLikeOrDepartmentCodeLike(String departmentName, String departmentCode, Pageable pageable);
+
+    Department findByDepartmentName(String departmentName);
+
+	Department findByDepartmentCode(String code);
 }

@@ -4,6 +4,7 @@ import java.io.ByteArrayInputStream;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
 import java.util.Map;
@@ -75,6 +76,7 @@ public class UserServiceImpl implements UserService
     private DepartmentService departmentService;
     private UserTypeService userTypeService;
     private ImageHelper imageHelper;
+    private GlobalHelper globalHelper;
 
 	public ResponseEntity<ApiResponse> createUser(UserRequestDto userRequestDto, MultipartFile file,String imagePath)
 	{
@@ -170,28 +172,33 @@ public class UserServiceImpl implements UserService
     }
 
 	@Override
-	public ResponseEntity<?> getAllUsers(Integer pageNumber, Integer pageSize, String sortBy,String sortDirection,String keywords)
+	public ResponseEntity<?> getAllUsers(Integer pageNumber, Integer pageSize, String sortBy,String sortDirection,String searchBy,String keywords)
     {
-        try{
-
+        try
+        {
             Sort sort = sortDirection.equalsIgnoreCase("asc")?Sort.by(sortBy).ascending():Sort.by(sortBy).descending();
 
             Pageable pageable = PageRequest.of(pageNumber, pageSize, sort);
-
-            Page<User> page = userRepository.findByUserNameLikeOrUserEmailLike("%" + keywords + "%", "%" + keywords + "%",pageable);
-            if(page.getTotalElements()==0)
+            Page<User> page;
+            String x = searchBy.equalsIgnoreCase("name") || searchBy.equalsIgnoreCase("email")?"name/email":searchBy.toLowerCase();
+            switch(x)
             {
-                page = userRepository.findByUserMobileLikeOrderByUserId("%"+keywords+"%",pageable);
-                if(page.getTotalElements()==0)
-                {
+                case "name/email":
+                    page = userRepository.findByUserNameLikeOrUserEmailLike("%" + keywords + "%", "%" + keywords + "%",pageable);
+                    break;
+                case "mobile":
+                    page = userRepository.findByUserMobileLikeOrderByUserId("%"+keywords+"%",pageable);
+                    break;
+                case "usertype":
                     List<UserType> userTypeList = userTypeRepository.findByUserTypeNameLikeOrUserTypeCodeLike("%" + keywords + "%", "%" + keywords + "%");
                     page = userRepository.findAllByUserTypeIn(userTypeList,pageable);
-                    if(page.getTotalElements()==0)
-                    {
-                        List<Department> departmentList = departmentRepository.findByDepartmentNameLikeOrDepartmentCodeLike("%" + keywords + "%", "%" + keywords + "%");
-                        page = userRepository.findAllByDepartmentIn(departmentList,pageable);
-                    }
-                }
+                    break;
+                case "department":
+                    List<Department> departmentList = departmentRepository.findByDepartmentNameLikeOrDepartmentCodeLike("%" + keywords + "%", "%" + keywords + "%");
+                    page = userRepository.findAllByDepartmentIn(departmentList,pageable);
+                    break;
+                default:
+                    throw new RuntimeException("searchBy: "+searchBy+" is not available");
             }
             List<User> userList = page.getContent();
             if(!userList.isEmpty())
@@ -246,7 +253,7 @@ public class UserServiceImpl implements UserService
         ExcelHelper<UserExcelUploadResponse> excelHelper = new ExcelHelper<>();
         Map<String,String> headersMap = ExcelHeadersInfo.getUserHeadersMap();
         List<UserExcelUploadResponse> list = excelHelper.convertExcelToList(excelFile,headersMap,UserExcelUploadResponse.class);
-        ExcelUploadResponse excelUploadResponse = GlobalHelper.getCorrectAndIncorrectList(list,UserExcelUploadResponse.class);
+        ExcelUploadResponse excelUploadResponse = globalHelper.getCorrectAndIncorrectList(list,UserExcelUploadResponse.class);
         return ResponseEntity.status(HttpStatus.OK).body(excelUploadResponse);
     }
     public ResponseEntity<?> saveCorrectList(List<UserExcelUploadResponse> correctList)
@@ -279,25 +286,31 @@ public class UserServiceImpl implements UserService
         User user = getUser(userId);
         return documentService.uploadDocument(anyFile,user,filePath);
     }
-    public ResponseEntity<Resource> downloadUserDataInExcel(String keywords)
+    public ResponseEntity<Resource> downloadUserDataInExcel(String searchBy,String keywords)
     {
         Map<String,String> headersMap = ExcelHeadersInfo.getUserHeadersMap();
 
         String sheetName = "user_data";
-
-        List<User> userList = userRepository.findByUserNameLikeOrUserEmailLike("%" + keywords + "%", "%" + keywords + "%");
-        if(userList.isEmpty())
+        List<User> userList = new ArrayList<>();
+        String x = searchBy.equalsIgnoreCase("name") || searchBy.equalsIgnoreCase("email")?"name/email":searchBy.toLowerCase();
+        switch (x)
         {
-            userList = userRepository.findByUserMobileLike("%" + keywords + "%");
-            if(userList.isEmpty())
-            {
+            case "name/email":
+                userList = userRepository.findByUserNameLikeOrUserEmailLike("%" + keywords + "%", "%" + keywords + "%");
+                break;
+            case "mobile":
+                userList = userRepository.findByUserMobileLike("%" + keywords + "%");
+                break;
+            case "usertype":
                 List<UserType> userTypeList = userTypeRepository.findByUserTypeNameLikeOrUserTypeCodeLike("%" + keywords + "%", "%" + keywords + "%");
                 userList = userRepository.findAllByUserTypeIn(userTypeList);
-                if (userList.isEmpty()) {
-                    List<Department> departmentList = departmentRepository.findByDepartmentNameLikeOrDepartmentCodeLike("%" + keywords + "%", "%" + keywords + "%");
-                    userList = userRepository.findAllByDepartmentIn(departmentList);
-                }
-            }
+                break;
+            case "department":
+                List<Department> departmentList = departmentRepository.findByDepartmentNameLikeOrDepartmentCodeLike("%" + keywords + "%", "%" + keywords + "%");
+                userList = userRepository.findAllByDepartmentIn(departmentList);
+                break;
+            default:
+                throw new RuntimeException("searchBy: "+searchBy+" is not available");
         }
 
         if(!userList.isEmpty())

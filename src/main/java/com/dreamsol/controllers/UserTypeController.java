@@ -37,16 +37,24 @@ public class UserTypeController
 	
 	@Operation(
 			summary = "Create new usertype",
-			description = "It is used to save data into database"
+			description = "This api will take name, code, status and save the data into database."
 	)
 	@PostMapping("/create")
 	public ResponseEntity<ApiResponse> createUserType(@Valid @RequestBody UserTypeRequestDto userTypeRequestDto)
 	{
 		return userTypeService.createUserType(userTypeRequestDto);
 	}
-
 	@Operation(
-			summary = "delete existing usertype",
+			summary = "Update existing usertype by providing id",
+			description = "This api will replace the existing data by new one."
+	)
+	@PutMapping("/update/{userTypeId}")
+	public ResponseEntity<ApiResponse> updateUserType(@Valid @RequestBody UserTypeRequestDto userTypeRequestDto,@PathVariable Long userTypeId)
+	{
+		return userTypeService.updateUserType(userTypeRequestDto,userTypeId);
+	}
+	@Operation(
+			summary = "Delete existing usertype",
 			description = "It is used to delete data from database"
 	)
 	@DeleteMapping("/delete/{userTypeId}")
@@ -56,17 +64,7 @@ public class UserTypeController
 	}
 	
 	@Operation(
-			summary = "Update existing usertype",
-			description = "It is used to modify data into database"
-	)
-	@PutMapping("/update/{userTypeId}")
-	public ResponseEntity<ApiResponse> updateUserType(@Valid @RequestBody UserTypeRequestDto userTypeRequestDto,@PathVariable Long userTypeId)
-	{
-		return userTypeService.updateUserType(userTypeRequestDto,userTypeId);
-	}
-	
-	@Operation(
-			summary = "Get existing usertype",
+			summary = "Get a single usertype and related users info.",
 			description = "It is used to retrieve single data from database"
 	)
 	@GetMapping("/get/{userTypeId}")
@@ -75,27 +73,12 @@ public class UserTypeController
 		 return userTypeService.getSingleUserType(userTypeId);
 	}
 	
-	/*@Operation(
-			summary = "Getting all usertype List",
-			description = "It is used to retrieve all data from database"
-	)
-	@GetMapping("/get-all")
-	public ResponseEntity<UserTypeAllDataResponse> getAllUserTypes(
-			@RequestParam(value = "pageNumber", defaultValue = "0", required = false) @Min(0) Integer pageNumber,
-			@RequestParam(value = "pageSize", defaultValue = "10", required = false) @Min(1) Integer pageSize,
-			@RequestParam(value = "sortBy", defaultValue = "userTypeId", required = false) String sortBy,
-			@RequestParam(value = "sortDirection", defaultValue = "asc", required = false) String sortDirection
-	)
-	{
-		return userTypeService.getAllUserTypes(pageNumber,pageSize, sortBy, sortDirection);
-	}*/
-	
 	@Operation(
-			summary = "Search usertypes containing keywords",
+			summary = "Get all usertype records by searching keywords",
 			description = "It is used to search usertypes on the basis of usertype name/code containing given keyword"
 			)
-	@GetMapping("/search")
-	public ResponseEntity<AllDataResponse> searchUserTypes(
+	@GetMapping("/get-all")
+	public ResponseEntity<AllDataResponse> getAllUserTypes(
 			@RequestParam(value = "pageNumber", defaultValue = "0", required = false) @Min(0) Integer pageNumber,
 			@RequestParam(value = "pageSize", defaultValue = "10", required = false) @Min(1) Integer pageSize,
 			@RequestParam(value = "sortBy", defaultValue = "userTypeId", required = false) String sortBy,
@@ -103,11 +86,11 @@ public class UserTypeController
 			@RequestParam(value = "keywords", defaultValue = "", required = false) String keywords
 	)
 	{
-		return userTypeService.searchUserTypes(pageNumber,pageSize,sortBy,sortDirection,keywords);
+		return userTypeService.getAllUserTypes(pageNumber,pageSize,sortBy,sortDirection,keywords);
 	}
 
 	@Operation(
-			summary = "Validate excel data and get correct and incorrect list",
+			summary = "Get correct and incorrect list of data by validating name and code",
 			description = "It is used to upload an excel file for filtering correct and incorrect data"
 	)
 	@PostMapping(value = "/validate-excel-data", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)

@@ -4,6 +4,7 @@ import java.util.List;
 
 import com.dreamsol.response.UserExcelUploadResponse;
 import io.swagger.v3.oas.annotations.Hidden;
+import jakarta.validation.constraints.Pattern;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
@@ -32,7 +33,7 @@ import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/api/users")
-@Tag(name = "USER REST API", description = "This API handles all required operation related to user entity")
+@Tag(name = "User", description = "This API handles all required operation related to user entity")
 @Validated
 public class UserController 
 {
@@ -103,25 +104,20 @@ public class UserController
 			@RequestParam(value = "pageSize", defaultValue = "10", required = false) Integer pageSize,
 			@RequestParam(value = "sortBy", defaultValue = "userId", required = false) String sortBy,
 			@RequestParam(value = "sortDirection",defaultValue = "asc", required = false) String sortDirection,
+			@Pattern(regexp = "name|email|mobile|usertype|department")
+			@RequestParam(value = "searchBy", defaultValue = "name", required = false) String searchBy,
 			@RequestParam(value ="keywords", defaultValue = "", required = false) String keywords
 	)
 	{
-		return userService.getAllUsers(pageNumber,pageSize,sortBy,sortDirection,keywords);
+		return userService.getAllUsers(pageNumber,pageSize,sortBy,sortDirection,searchBy,keywords);
 	}
-	/*@Operation(
-			summary = "Save list of all users data which are correct. ",
-			description = "This api helps to list of all users containing correct data."
-	)
-	@PostMapping(value = "/save-users")
-	public ResponseEntity<ApiResponse> saveUsers(@RequestBody List<UserRequestDto> userRequestDtoList)
-	{
-		return userService.saveUsers(userRequestDtoList);
-	}*/
+
 	@Operation(
 			summary = "Download user's image as string ",
 			description = "This api helps to download an image as string in Base64 format"
 		)
 	@GetMapping(value = "/download-image-string/{imageName}" ,produces = MediaType.TEXT_PLAIN_VALUE)
+	@Hidden
 	public ResponseEntity<String> downloadImageFileAsBase64(
 			@PathVariable("imageName") String imageName
 	)
@@ -174,7 +170,7 @@ public class UserController
 			description = "This api will help to save the correct data into database"
 	)
 	@PostMapping(value = "/save-correct-list")
-	public ResponseEntity<?> saveCorrectList(@RequestBody List<UserExcelUploadResponse> correctList)
+	public ResponseEntity<?> saveCorrectList(@Valid @RequestBody List<UserExcelUploadResponse> correctList)
 	{
 		return userService.saveCorrectList(correctList);
 	}
@@ -184,9 +180,11 @@ public class UserController
 	)
 	@GetMapping(value = "/download-excel")
 	public ResponseEntity<Resource> downloadUserDataAsExcel(
+			@Pattern(regexp = "name|email|mobile|usertype|department")
+			@RequestParam(value ="searchBy", defaultValue = "name", required = false) String searchBy,
 			@RequestParam(value = "keywords", defaultValue = "", required = false) String keywords)
 	{
-		return userService.downloadUserDataInExcel(keywords);
+		return userService.downloadUserDataInExcel(searchBy,keywords);
 	}
 	@Operation(
 			summary = "Download excel sample ",

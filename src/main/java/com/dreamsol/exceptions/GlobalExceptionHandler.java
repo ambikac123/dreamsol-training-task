@@ -1,6 +1,7 @@
 package com.dreamsol.exceptions;
 
 import com.dreamsol.response.ApiResponse;
+import jakarta.validation.ConstraintViolationException;
 import org.springframework.dao.DataAccessException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -69,5 +70,12 @@ public class GlobalExceptionHandler
 		apiResponse.setMessage(e.getMessage());
 		apiResponse.setSuccess(false);
 		return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(apiResponse);
+	}
+	@ExceptionHandler(ConstraintViolationException.class)
+	public ResponseEntity<ApiResponse> ConstraintViolationExceptionHandler(ConstraintViolationException e)
+	{
+		apiResponse.setMessage(e.getMessage());
+		apiResponse.setSuccess(false);
+		return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(apiResponse);
 	}
 }

@@ -5,6 +5,7 @@ import com.dreamsol.entities.Department;
 import com.dreamsol.entities.User;
 import com.dreamsol.entities.UserType;
 import com.dreamsol.exceptions.ResourceNotFoundException;
+import com.dreamsol.repositories.DepartmentRepository;
 import com.dreamsol.repositories.UserRepository;
 
 import java.io.File;
@@ -19,7 +20,11 @@ import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import com.dreamsol.repositories.UserTypeRepository;
+import com.dreamsol.response.DepartmentExcelUploadResponse;
 import com.dreamsol.response.ExcelUploadResponse;
+import com.dreamsol.response.UserExcelUploadResponse;
+import com.dreamsol.response.UserTypeExcelUploadResponse;
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
 import org.springframework.beans.BeanUtils;
@@ -32,71 +37,127 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 @AllArgsConstructor(onConstructor_ = {@Autowired})
 public class GlobalHelper
 {
+    private DepartmentRepository departmentRepository;
+    private UserTypeRepository userTypeRepository;
     private UserRepository userRepository;
     public static final String REGEX_NAME = "[A-Za-z]{3,}(\\s[A-Za-z]{3,})*$";
-    public static final String REGEX_EMAIL = "^[a-zA-Z0-9_+&*-]+(?:\\.[a-zA-Z0-9_+&*-]+)*@(?:[a-zA-Z0-9-]+\\.)+[a-zA-Z]{2,7}$";
+    public static final String REGEX_EMAIL = "^[a-zA-Z]{3,}@[a-zA-Z]{2,}\\.[a-zA-Z]{2,}$";
+    //public static final String REGEX_EMAIL = "^[a-zA-Z0-9_+&*-]+(?:\\.[a-zA-Z0-9_+&*-]+)*@(?:[a-zA-Z0-9-]+\\.)+[a-zA-Z]{2,7}$";
     public static final String REGEX_MOBILE = "^[6-9]\\d{9}$";
     public static final String REGEX_CODE = "^[a-zA-Z]{2,7}\\d{0,3}$";
-    public static boolean isValidName(String name)
+    public boolean isValidName(String name)
     {
         Pattern pattern = Pattern.compile(REGEX_NAME);
         Matcher matcher = pattern.matcher(name);
         return matcher.matches();
     }
-    public static <T> boolean isValidName(Field f,T t)
+    public <T> boolean isValidName(Field f,T t)
     {
         try
         {
-            return isValidName((String) f.get(t));
+            if(t instanceof DepartmentExcelUploadResponse) {
+                Department d = departmentRepository.findByDepartmentName((String) f.get(t));
+               return isValidName((String) f.get(t)) && Objects.isNull(d);
+            }
+            else if(t instanceof UserTypeExcelUploadResponse) {
+                UserType u = userTypeRepository.findByUserTypeName((String) f.get(t));
+                return isValidName((String) f.get(t)) && Objects.isNull(u);
+            }
+            else if(t instanceof UserExcelUploadResponse)
+            {
+                if(f.getName().toLowerCase().contains("department"))
+                {
+                    Department d = departmentRepository.findByDepartmentName((String) f.get(t));
+                    return !Objects.isNull(d) && d.isStatus();
+                }
+                else if(f.getName().toLowerCase().contains("usertype"))
+                {
+                    UserType ut = userTypeRepository.findByUserTypeName((String) f.get(t));
+                    return !Objects.isNull(ut) && ut.isStatus();
+                }
+                else if(f.getName().toLowerCase().contains("user")) {
+                    return isValidName((String) f.get(t));
+                }
+                return false;
+            }
+            return false;
         }catch(Exception e)
         {
             throw new InputMismatchException(e.getMessage());
         }
     }
-    public static boolean isValidCode(String code)
+    public boolean isValidCode(String code)
     {
         Pattern pattern = Pattern.compile(REGEX_CODE);
         Matcher matcher = pattern.matcher(code);
         return matcher.matches();
     }
-    public static <T> boolean isValidCode(Field f,T t)
+    public <T> boolean isValidCode(Field f,T t)
     {
         try
         {
-            return isValidCode((String) f.get(t));
+            if(t instanceof DepartmentExcelUploadResponse) {
+                Department d = departmentRepository.findByDepartmentCode((String) f.get(t));
+                return isValidCode((String) f.get(t)) && Objects.isNull(d);
+            }
+            else if(t instanceof UserTypeExcelUploadResponse) {
+                UserType u = userTypeRepository.findByUserTypeCode((String) f.get(t));
+                return isValidCode((String) f.get(t)) && Objects.isNull(u);
+            }
+            else if(t instanceof UserExcelUploadResponse)
+            {
+                if(f.getName().toLowerCase().contains("department"))
+                {
+                    Department d = departmentRepository.findByDepartmentCode((String) f.get(t));
+                    return !Objects.isNull(d) && d.isStatus();
+                }
+                else if(f.getName().toLowerCase().contains("usertype"))
+                {
+                    UserType ut = userTypeRepository.findByUserTypeCode((String) f.get(t));
+                    return !Objects.isNull(ut) && ut.isStatus();
+                }
+                return false;
+            }
+            return false;
         }catch(Exception e)
         {
-            return false;
+            throw new InputMismatchException(e.getMessage());
         }
     }
-    public static boolean isValidMobile(Long mobile)
+    public boolean isValidMobile(Long mobile)
     {
         String mobileNo = Long.toString(mobile);
         Pattern pattern = Pattern.compile(REGEX_MOBILE);
         Matcher matcher = pattern.matcher(mobileNo);
         return matcher.matches();
     }
-    public static <T> boolean isValidMobileNo(Field f,T t)
+    public <T> boolean isValidMobileNo(Field f,T t)
     {
         try
         {
-            return isValidMobile((long) f.get(t));
+            if(t instanceof UserExcelUploadResponse)
+                return isValidMobile((Long) f.get(t)) && Objects.isNull(userRepository.findByUserMobile((Long) f.get(t)));
+            else
+                return false;
         }catch(Exception e)
         {
             return false;
         }
     }
-    public static boolean isValidEmail(String email)
+    public boolean isValidEmail(String email)
     {
         Pattern pattern = Pattern.compile(REGEX_EMAIL);
         Matcher matcher = pattern.matcher(email);
         return matcher.matches();
     }
-    public static <T> boolean isValidEmail(Field f,T t)
+    public <T> boolean isValidEmail(Field f,T t)
     {
         try
         {
-            return isValidEmail((String) f.get(t));
+            if(t instanceof UserExcelUploadResponse)
+                return isValidEmail((String) f.get(t)) && Objects.isNull(userRepository.findByUserEmail((String) f.get(t)));
+            else
+                return false;
         }catch(Exception e)
         {
             return false;
@@ -137,7 +198,7 @@ public class GlobalHelper
         }
         return userResponseDto;
     }
-    public static <T> ExcelUploadResponse getCorrectAndIncorrectList(List<T> list, Class<T> entityName)
+    public <T> ExcelUploadResponse getCorrectAndIncorrectList(List<T> list, Class<T> entityName)
     {
         try
         {
@@ -155,22 +216,24 @@ public class GlobalHelper
                     field.setAccessible(true);
                     if (field.getName().toLowerCase().contains("name"))
                     {
-                        if (GlobalHelper.isValidName(field, t))
+                        if (isValidName(field, t))
+                        {
                             field.set(entity, field.get(t));
+                        }
                         else {
                             isValidEntity = false;
                             field.set(entity, field.get(t));
-                            errorMessage.append("invalid name format, ");
+                            errorMessage.append(field.getName()).append(", ");
                         }
                     }
                     else if (field.getName().toLowerCase().contains("code"))
                     {
-                        if (GlobalHelper.isValidCode(field, t))
+                        if (isValidCode(field, t))
                             field.set(entity, field.get(t));
                         else {
                             isValidEntity = false;
                             field.set(entity, field.get(t));
-                            errorMessage.append("invalid code format, ");
+                            errorMessage.append(field.getName()).append(", ");
                         }
                     }
                     else if (field.getName().toLowerCase().contains("status"))
@@ -179,22 +242,22 @@ public class GlobalHelper
                     }
                     else if (field.getName().toLowerCase().contains("mobile"))
                     {
-                        if (GlobalHelper.isValidMobileNo(field, t))
+                        if (isValidMobileNo(field, t))
                             field.set(entity, field.get(t));
                         else {
                             isValidEntity = false;
                             field.set(entity, field.get(t));
-                            errorMessage.append("invalid mobile number, ");
+                            errorMessage.append(field.getName()).append(", ");
                         }
                     }
                     else if (field.getName().toLowerCase().contains("email"))
                     {
-                        if (GlobalHelper.isValidEmail(field, t))
+                        if (isValidEmail(field, t))
                             field.set(entity, field.get(t));
                         else {
                             isValidEntity = false;
                             field.set(entity, field.get(t));
-                            errorMessage.append("invalid email id, ");
+                            errorMessage.append(field.getName()).append(", ");
                         }
                     }
                     else if (field.getName().toLowerCase().contains("message"))
@@ -202,6 +265,7 @@ public class GlobalHelper
                         if (isValidEntity) {
                             field.set(entity, "correct");
                         } else {
+                            errorMessage.append(" invalid/ already exist");
                             field.set(entity, errorMessage.toString());
                         }
                     }

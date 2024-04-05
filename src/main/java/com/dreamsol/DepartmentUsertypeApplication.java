@@ -12,13 +12,13 @@ import io.swagger.v3.oas.annotations.servers.Server;
 @SpringBootApplication
 @OpenAPIDefinition(
 		info = @Info(
-				title = "Department-UserType",
-				version = "",
-				description = "This is Department-usertype api docs"
+				title = "DreamSol Tele Solutions Pvt. Ltd.",
+				version = "v3",
+				description = "This is documentation for RESTFUL APIs Created By: Ambika Chaudhary"
 				),
 		servers = @Server(
 				url = "http://localhost:8080",
-				description = "Department-UserType url"
+				description = "resource-name"
 				)
 )
 public class DepartmentUsertypeApplication

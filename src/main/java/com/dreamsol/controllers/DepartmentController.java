@@ -35,11 +35,9 @@ import java.util.List;
 public class DepartmentController {
     @Autowired
     private DepartmentService departmentService;
-
-
     @Operation(
             summary = "Create new department",
-            description = "It is used to save data into database"
+            description = "This api will take name, code, status and save the data into database."
     )
     @PostMapping("/create")
     public ResponseEntity<ApiResponse> createDepartment(@Valid @RequestBody DepartmentRequestDto departmentDto) {
@@ -48,7 +46,7 @@ public class DepartmentController {
 
     @Operation(
             summary = "Update existing department",
-            description = "It is used to modify data into database"
+            description = "This api will replace the existing data by new one."
     )
     @PutMapping("/update/{deptId}")
     public ResponseEntity<ApiResponse> updateDepartment(@Valid @RequestBody DepartmentRequestDto departmentDto, @PathVariable("deptId") Long departmentId) {
@@ -56,8 +54,8 @@ public class DepartmentController {
     }
 
     @Operation(
-            summary = "delete existing department",
-            description = "It is used to delete data from database"
+            summary = "Delete existing department",
+            description = "This api will take department id and delete the corresponding record."
     )
     @DeleteMapping("/delete/{deptId}")
     public ResponseEntity<ApiResponse> deleteDepartment(@Valid @PathVariable("deptId") Long departmentId) {
@@ -65,28 +63,13 @@ public class DepartmentController {
     }
 
     @Operation(
-            summary = "Getting existing department",
+            summary = "Get a single department and related users info.",
             description = "It is used to retrieve single data from database"
     )
     @GetMapping("/get/{deptId}")
-    public ResponseEntity<DepartmentResponseDto> getSingleDepartment(@Valid @PathVariable("deptId") Long departmentId) {
+    public ResponseEntity<DepartmentResponseDto> getSingleDepartment(@PathVariable("deptId") Long departmentId) {
         return departmentService.getSingleDepartment(departmentId);
     }
-
-    /*@Operation(
-            summary = "Getting all departments List",
-            description = "It is used to retrieve all data from database"
-    )
-    @GetMapping("/get-all")
-    public ResponseEntity<DepartmentAllDataResponse> getAllDepartments(
-            @RequestParam(value = "pageNumber", defaultValue = "0", required = false) @Min(0) int pageNumber,
-            @RequestParam(value = "pageSize", defaultValue = "10", required = false) @Min(1) int pageSize,
-            @RequestParam(value = "sortBy", defaultValue = "departmentId", required = false)
-            @Pattern(regexp = "(departmentId|departmentName|departmentCode|timeStamp)") String sortBy,
-            @RequestParam(value = "sortDirection", defaultValue = "asc", required = false) String sortDirection
-    ) {
-        return departmentService.getAllDepartments(pageNumber, pageSize, sortBy, sortDirection);
-    }*/
 
     @Operation(
             summary = "Search departments containing keywords",
