@@ -32,4 +32,6 @@ public interface UserTypeService
 	boolean isUserTypeExist(UserTypeRequestDto userTypeRequestDto);
 
     UserType getUserType(String userTypeName, String userTypeCode);
+
+    ResponseEntity<?> downloadDummyData(int noOfRecords);
 }

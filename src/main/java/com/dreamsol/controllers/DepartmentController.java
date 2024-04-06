@@ -119,8 +119,9 @@ public class DepartmentController {
             description = "It is used to get dummy data for department"
     )
     @GetMapping(value = "/download-excel-dummy", produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
-    public ResponseEntity<?> downloadDepartmentDummyDataAsExcel() {
-        return departmentService.downloadDummyData();
+    public ResponseEntity<?> downloadDepartmentDummyDataAsExcel(@RequestParam(value = "noOfRecords", defaultValue = "10", required = false) int noOfRecords)
+    {
+        return departmentService.downloadDummyData(noOfRecords);
     }
 
     @Operation(

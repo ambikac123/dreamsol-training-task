@@ -157,7 +157,7 @@ public class UserController
 		return userService.downloadUserDocument(fileName,filePath);
 	}
 	@Operation(
-			summary = "Upload Excel File containing user data ",
+			summary = "Validate excel data and get correct and incorrect data",
 			description = "This api helps to upload an excel file containing user's data and returns an JSON object containing two separate lists (correct and incorrect data)"
 		)
 	@PostMapping(value = "/validate-excel-data", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
@@ -194,5 +194,15 @@ public class UserController
 	public ResponseEntity<Resource> downloadUserExcelSample()
 	{
 		return userService.getUserExcelSample();
+	}
+
+	@Operation(
+			summary = "Download auto generated dummy data as excel",
+			description = "It is used to get dummy data"
+	)
+	@GetMapping(value = "/download-excel-dummy", produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
+	public ResponseEntity<?> downloadUserDummyDataAsExcel(@RequestParam(value = "noOfRecords", defaultValue = "10", required = false) int noOfRecords)
+	{
+		return userService.downloadDummyData(noOfRecords);
 	}
 }

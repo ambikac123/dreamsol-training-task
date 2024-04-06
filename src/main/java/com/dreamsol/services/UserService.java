@@ -37,4 +37,5 @@ public interface UserService
 	User getUser(UserRequestDto userRequestDto, UserType userType, Department department, UserImage userImage);
 	User getUser(UserRequestDto userRequestDto);
 	UserSingleDataResponseDto userToUserSingleDataResponseDto(User user);
+	ResponseEntity<?> downloadDummyData(int noOfRecords);
 }

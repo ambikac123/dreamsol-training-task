@@ -22,7 +22,7 @@ public interface DepartmentService
 	ResponseEntity<?> getCorrectAndIncorrectDepartmentList(MultipartFile file);
 	ResponseEntity<?> saveCorrectList(List<DepartmentRequestDto> correctList);
 	ResponseEntity<?> downloadDataFromDB();
-	ResponseEntity<?> downloadDummyData();
+	ResponseEntity<?> downloadDummyData(int noOfRecords);
 	ResponseEntity<Resource> getDepartmentExcelSample();
 
 	/* ----------------------------- Department Helper Methods --------------------------- */

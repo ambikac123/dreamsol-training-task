@@ -126,4 +126,14 @@ public class UserTypeController
 	{
 		return userTypeService.getUserTypeExcelSample();
 	}
+
+	@Operation(
+			summary = "Download department auto generated dummy data as excel",
+			description = "It is used to get dummy data for department"
+	)
+	@GetMapping(value = "/download-excel-dummy", produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
+	public ResponseEntity<?> downloadUserTypeDummyDataAsExcel(@RequestParam(value = "noOfRecords", defaultValue = "10", required = false) int noOfRecords)
+	{
+		return userTypeService.downloadDummyData(noOfRecords);
+	}
 }

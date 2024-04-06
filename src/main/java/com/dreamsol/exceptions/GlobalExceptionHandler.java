@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import java.sql.SQLIntegrityConstraintViolationException;
 import java.util.HashMap;
+import java.util.InputMismatchException;
 import java.util.Map;
 
 @RestControllerAdvice
@@ -72,7 +73,14 @@ public class GlobalExceptionHandler
 		return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(apiResponse);
 	}
 	@ExceptionHandler(ConstraintViolationException.class)
-	public ResponseEntity<ApiResponse> ConstraintViolationExceptionHandler(ConstraintViolationException e)
+	public ResponseEntity<ApiResponse> constraintViolationExceptionHandler(ConstraintViolationException e)
+	{
+		apiResponse.setMessage(e.getMessage());
+		apiResponse.setSuccess(false);
+		return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(apiResponse);
+	}
+	@ExceptionHandler(InputMismatchException.class)
+	public ResponseEntity<ApiResponse> inputMismatchExceptionHandler(InputMismatchException e)
 	{
 		apiResponse.setMessage(e.getMessage());
 		apiResponse.setSuccess(false);

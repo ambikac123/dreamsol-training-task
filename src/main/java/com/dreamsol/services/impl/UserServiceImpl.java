@@ -62,6 +62,7 @@ import com.dreamsol.exceptions.ResourceNotFoundException;
 import com.dreamsol.response.ApiResponse;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
+@SuppressWarnings("ALL")
 @Service
 @NoArgsConstructor
 @AllArgsConstructor(onConstructor_ = {@Autowired})
@@ -77,7 +78,8 @@ public class UserServiceImpl implements UserService
     private UserTypeService userTypeService;
     private ImageHelper imageHelper;
     private GlobalHelper globalHelper;
-
+    private ExcelHelper excelHelper;
+    private ApiResponse apiResponse;
 	public ResponseEntity<ApiResponse> createUser(UserRequestDto userRequestDto, MultipartFile file,String imagePath)
 	{
 		try
@@ -86,7 +88,12 @@ public class UserServiceImpl implements UserService
             if(Objects.isNull(user))
             {
                 UserType userType = userTypeService.getUserType(userRequestDto.getUserType());
+                if(Objects.isNull(userType)) {
+                    return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ApiResponse("usertype doesn't exist", false));
+                }
                 Department department = departmentService.getDepartment(userRequestDto.getDepartment());
+                if(Objects.isNull(department))
+                    return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ApiResponse("department doesn't exist",false));
                 UserImage userImage = imageHelper.getImage(file,imagePath);
                 userImage.setTimeStamp(LocalDateTime.now());
                 user = getUser(userRequestDto,userType,department,userImage);
@@ -111,36 +118,37 @@ public class UserServiceImpl implements UserService
     {
         try
         {
-                User user = getUser(userId);
-                if(!Objects.isNull(user))
-                {
-                    UserType userType = userTypeService.getUserType(userRequestDto.getUserType());
-                    Department department = departmentService.getDepartment(userRequestDto.getDepartment());
-                    UserImage userImage = user.getUserImage();
-                    if(!Objects.equals(file.getOriginalFilename(), ""))
-                    {
-                        if(!Objects.isNull(userImage))
-                        {
-                            imageHelper.deleteImage(userImage.getDuplicateImageName(),imagePath);
-                        }
-                        userImage = imageHelper.getImage(file,imagePath);
-                        userImage.setTimeStamp(LocalDateTime.now());
-                        userImage.setStatus(true);
-
-                    }
-
-                    user = getUser(userRequestDto,userType,department,userImage);
-                    user.setUserId(userId);
-                    user.setTimeStamp(LocalDateTime.now());
-                    try{
-                        userRepository.save(user);
-                    }catch (DataAccessException e)
-                    {
-                        imageHelper.deleteImage(userImage.getDuplicateImageName(),imagePath);
-                        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ApiResponse("user with id "+userId+" not updated, Reason: "+e.getMessage(),false));
-                    }
-                    return ResponseEntity.status(HttpStatus.OK).body(new ApiResponse("user with id "+userId+" updated successfully!",true));
+            User user = getUser(userId);
+            if (!Objects.isNull(user)) {
+                UserType userType = userTypeService.getUserType(userRequestDto.getUserType());
+                if (Objects.isNull(userType)) {
+                    return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ApiResponse("usertype doesn't exist", false));
                 }
+                Department department = departmentService.getDepartment(userRequestDto.getDepartment());
+                if (Objects.isNull(department))
+                    return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ApiResponse("department doesn't exist", false));
+                UserImage userImage = user.getUserImage();
+                if (!Objects.equals(file.getOriginalFilename(), "")) {
+                    if (!Objects.isNull(userImage)) {
+                        imageHelper.deleteImage(userImage.getDuplicateImageName(), imagePath);
+                    }
+                    userImage = imageHelper.getImage(file, imagePath);
+                    userImage.setTimeStamp(LocalDateTime.now());
+                    userImage.setStatus(true);
+
+                }
+
+                user = getUser(userRequestDto, userType, department, userImage);
+                user.setUserId(userId);
+                user.setTimeStamp(LocalDateTime.now());
+                try {
+                    userRepository.save(user);
+                } catch (DataAccessException e) {
+                    imageHelper.deleteImage(userImage.getDuplicateImageName(), imagePath);
+                    return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ApiResponse("user with id " + userId + " not updated, Reason: " + e.getMessage(), false));
+                }
+                return ResponseEntity.status(HttpStatus.OK).body(new ApiResponse("user with id " + userId + " updated successfully!", true));
+            }
             return ResponseEntity.status(HttpStatus.OK).body(new ApiResponse("No user found!",false));
         }
         catch(Exception e)
@@ -253,12 +261,16 @@ public class UserServiceImpl implements UserService
         ExcelHelper<UserExcelUploadResponse> excelHelper = new ExcelHelper<>();
         Map<String,String> headersMap = ExcelHeadersInfo.getUserHeadersMap();
         List<UserExcelUploadResponse> list = excelHelper.convertExcelToList(excelFile,headersMap,UserExcelUploadResponse.class);
+        if(Objects.isNull(list))
+            return  ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ApiResponse("invalid excel format",false));
         ExcelUploadResponse excelUploadResponse = globalHelper.getCorrectAndIncorrectList(list,UserExcelUploadResponse.class);
         return ResponseEntity.status(HttpStatus.OK).body(excelUploadResponse);
     }
     public ResponseEntity<?> saveCorrectList(List<UserExcelUploadResponse> correctList)
     {
         try {
+            if(correctList.isEmpty())
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ApiResponse("No users into the list",false));
             List<User> userList = correctList.stream().map(this::userExcelUploadResponseToUser).toList();
             userRepository.saveAll(userList);
             return ResponseEntity.status(HttpStatus.CREATED).body(new ApiResponse("Data added successfully!",true));
@@ -342,6 +354,17 @@ public class UserServiceImpl implements UserService
 
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_DISPOSITION,"attachment; filename="+sheetName+".xlsx")
+                .contentType(MediaType.parseMediaType("application/vnd.ms-excel"))
+                .body(resource);
+    }
+
+    public ResponseEntity<?> downloadDummyData(int noOfRecords)
+    {
+        Map<String,String> headersMap = ExcelHeadersInfo.getUserHeadersMap();
+        Resource resource = excelHelper.getAutoGeneratedExcelFile(headersMap,UserExcelUploadResponse.class,noOfRecords);
+        String fileName = "user_data.xlsx";
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION,"attachment;fileName="+fileName)
                 .contentType(MediaType.parseMediaType("application/vnd.ms-excel"))
                 .body(resource);
     }
