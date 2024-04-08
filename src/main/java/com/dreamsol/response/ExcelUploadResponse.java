@@ -12,4 +12,5 @@ public class ExcelUploadResponse
 {
     private List<?> correctList;
     private List<?> incorrectList;
+    private String message;
 }

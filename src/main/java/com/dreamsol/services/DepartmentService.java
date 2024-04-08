@@ -18,7 +18,7 @@ public interface DepartmentService
 	ResponseEntity<ApiResponse> updateDepartment(DepartmentRequestDto departmentDto,Long departmentId);
 	ResponseEntity<ApiResponse> deleteDepartment(Long departmentId);
 	ResponseEntity<DepartmentResponseDto> getSingleDepartment(Long departmentId);
-	ResponseEntity<AllDataResponse> searchDepartments(Integer pageNumber, Integer pageSize, String sortBy, String sortDirection, String keyword);
+	ResponseEntity<AllDataResponse> getAllDepartments(Integer pageNumber, Integer pageSize, String sortBy, String sortDirection, String keyword);
 	ResponseEntity<?> getCorrectAndIncorrectDepartmentList(MultipartFile file);
 	ResponseEntity<?> saveCorrectList(List<DepartmentRequestDto> correctList);
 	ResponseEntity<?> downloadDataFromDB();
@@ -34,7 +34,4 @@ public interface DepartmentService
 
     Department getDepartment(String departmentName, String departmentCode);
 
-	/*boolean isExistName(String name);
-	boolean isExistCode(String code);
-	boolean isActive(boolean status);*/
 }

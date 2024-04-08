@@ -2,6 +2,7 @@ package com.dreamsol.services.impl;
 
 import java.io.ByteArrayInputStream;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -69,6 +70,8 @@ public class UserTypeServiceImpl implements UserTypeService
 	{
 		try{
 			UserType userType = getUserType(userTypeId);
+			if(Objects.isNull(userType))
+				throw new ResourceNotFoundException("usertype","userTypeId",userTypeId);
 			BeanUtils.copyProperties(userTypeRequestDto,userType);
 			userType.setTimeStamp(LocalDateTime.now());
 			userTypeRepository.save(userType);
@@ -83,13 +86,14 @@ public class UserTypeServiceImpl implements UserTypeService
 	{
 		try{
 			UserType userType = getUserType(userTypeId);
+			if(Objects.isNull(userType))
+				throw new ResourceNotFoundException("usertype","userTypeId",userTypeId);
 			List<User> userList = globalHelper.getUsers(userType);
 			for(User user : userList)
 			{
 				user.setUserType(null);
 			}
-			userTypeRepository.delete(userType);
-			//userType.setStatus(false);
+			userType.setStatus(false);
 			return ResponseEntity.status(HttpStatus.OK).body(new ApiResponse("usertype with id "+userTypeId+" deleted successfully!", true));
 		}catch(Exception e)
 		{
@@ -99,22 +103,19 @@ public class UserTypeServiceImpl implements UserTypeService
 	
 	public ResponseEntity<UserTypeResponseDto> getSingleUserType(Long userTypeId)
 	{
-		try{
 			UserType userType = getUserType(userTypeId);
+			if(Objects.isNull(userType))
+				throw new ResourceNotFoundException("usertype","userTypeId",userTypeId);
 			UserTypeResponseDto userTypeResponseDto = userTypeToUserTypeResponseDto(userType);
 			return ResponseEntity.status(HttpStatus.OK).body(userTypeResponseDto);
-		}catch(Exception e){
-			throw new ResourceNotFoundException("usertype","userTypeId",userTypeId);
-		}
 	}
 
-	// Code to filter list of User Types using keywords
 	public ResponseEntity<AllDataResponse> getAllUserTypes(Integer pageNumber, Integer pageSize, String sortBy, String sortDirection, String keywords)
 	{
 		Sort sort = sortDirection.equalsIgnoreCase("asc")?Sort.by(sortBy).ascending():Sort.by(sortBy).descending();
 
 		Pageable pageable = PageRequest.of(pageNumber,pageSize, sort);
-		Page<UserType> page = userTypeRepository.findByUserTypeNameLikeOrUserTypeCodeLike("%"+keywords+"%","%"+keywords+"%",pageable);
+		Page<UserType> page = userTypeRepository.findByStatusTrueAndUserTypeNameLikeOrStatusTrueAndUserTypeCodeLike("%"+keywords+"%","%"+keywords+"%",pageable);
 		List<UserType> userTypeList = page.getContent();
 		List<UserTypeResponseDto> userTypeResponseDtoList = userTypeList.stream()
 				.map(this::userTypeToUserTypeResponseDto).toList();
@@ -129,29 +130,46 @@ public class UserTypeServiceImpl implements UserTypeService
 		allDataResponse.setPageInfo(pageInfo);
 		return ResponseEntity.status(HttpStatus.OK).body(allDataResponse);
 	}
-
-	public ResponseEntity<?> getCorrectAndIncorrectUserTypeList(MultipartFile excelFile)
+	public ResponseEntity<?> getCorrectAndIncorrectUserTypeList(MultipartFile file)
 	{
-		if (ExcelHelper.checkExcelFormat(excelFile))
+		if (ExcelHelper.checkExcelFormat(file))
 		{
-			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ApiResponse("Invalid file format", false));
+			String fileName = file.getOriginalFilename();
+			String fileExtension = fileName.substring(fileName.lastIndexOf('.')+1);
+			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ApiResponse("Invalid file format! required excel file but found "+fileExtension,false));
 		}
 		Map<String,String> headersMap = ExcelHeadersInfo.getUserTypeHeadersMap();
-		ExcelHelper<UserTypeExcelUploadResponse> excelHelper = new ExcelHelper<>();
-		List<UserTypeExcelUploadResponse> list = excelHelper.convertExcelToList(excelFile,headersMap,UserTypeExcelUploadResponse.class);
+		List<UserTypeExcelUploadResponse> list = excelHelper.convertExcelToList(file,headersMap,UserTypeExcelUploadResponse.class);
 		if(Objects.isNull(list))
-			return  ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ApiResponse("invalid excel format",false));
+			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ApiResponse("No suitable excel found, required usertype but found other",false));
 		ExcelUploadResponse excelUploadResponse = globalHelper.getCorrectAndIncorrectList(list,UserTypeExcelUploadResponse.class);
 		return ResponseEntity.ok(excelUploadResponse);
 	}
-
 	public ResponseEntity<?> saveCorrectList(List<UserTypeRequestDto> correctList)
 	{
 		try {
 			if(correctList.isEmpty())
 				return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ApiResponse("No usertypes into the list",false));
 			List<UserType> userTypeList = correctList.stream().map(this::userTypeRequestDtoToUserType).toList();
-			userTypeRepository.saveAll(userTypeList);
+			List<UserTypeRequestDto> dataNotSavedList = new ArrayList<>();
+			for(UserType u : userTypeList)
+			{
+				try{
+					userTypeRepository.save(u);
+				}catch (Exception e)
+				{
+					UserTypeRequestDto dto = new UserTypeRequestDto();
+					BeanUtils.copyProperties(u,dto);
+					dataNotSavedList.add(dto);
+				}
+			}
+			if(!dataNotSavedList.isEmpty())
+			{
+				ExcelUploadResponse response = new ExcelUploadResponse();
+				response.setIncorrectList(dataNotSavedList);
+				response.setMessage(dataNotSavedList.size()+" entity not saved into database");
+				return ResponseEntity.status(HttpStatus.OK).body(response);
+			}
 			return ResponseEntity.status(HttpStatus.CREATED).body(new ApiResponse("Data added successfully!",true));
 		}catch(Exception e)
 		{
@@ -163,7 +181,7 @@ public class UserTypeServiceImpl implements UserTypeService
 	{
 		Map<String,String> headersMap = ExcelHeadersInfo.getUserTypeHeadersMap();
 		String sheetName = "usertype_data";
-		List<UserType> userTypeList = userTypeRepository.findAll();
+		List<UserType> userTypeList = userTypeRepository.findAllByStatusTrue();
 		if(!userTypeList.isEmpty())
 		{
 			ByteArrayInputStream byteArrayInputStream = ExcelHelper.convertListToExcel(UserType.class,userTypeList, headersMap, sheetName);
@@ -203,7 +221,7 @@ public class UserTypeServiceImpl implements UserTypeService
 	{
 		Map<String,String> headersMap = ExcelHeadersInfo.getUserTypeHeadersMap();
 		Resource resource = excelHelper.getAutoGeneratedExcelFile(headersMap,UserTypeExcelUploadResponse.class,noOfRecords);
-		String fileName = "usertype_data.xlsx";
+		String fileName = "usertype_auto_generated_data.xlsx";
 		return ResponseEntity.ok()
 				.header(HttpHeaders.CONTENT_DISPOSITION,"attachment;fileName="+fileName)
 				.contentType(MediaType.parseMediaType("application/vnd.ms-excel"))
@@ -213,7 +231,11 @@ public class UserTypeServiceImpl implements UserTypeService
 
 	public UserType getUserType(long userTypeId)
 	{
-		return userTypeRepository.findById(userTypeId).orElseThrow(()->new ResourceNotFoundException("usertype","userTypeId",userTypeId));
+		UserType userType = userTypeRepository.findById(userTypeId).orElseThrow(()->new ResourceNotFoundException("usertype","userTypeId",userTypeId));
+		if(userType.isStatus())
+			return userType;
+		else
+			return null;
 	}
 	public UserType getUserType(UserTypeRequestDto userTypeRequestDto)
 	{
@@ -223,32 +245,51 @@ public class UserTypeServiceImpl implements UserTypeService
 	}
 	public UserType getUserType(String userTypeName,String userTypeCode)
 	{
-		return userTypeRepository.findByUserTypeNameAndUserTypeCode(userTypeName,userTypeCode);
+		UserType userType = userTypeRepository.findByUserTypeNameAndUserTypeCode(userTypeName,userTypeCode);
+		if(!Objects.isNull(userType) && userType.isStatus())
+			return userType;
+		else
+			return null;
 	}
 	public UserTypeResponseDto userTypeToUserTypeResponseDto(UserType userType)
 	{
-		UserTypeResponseDto userTypeResponseDto = new UserTypeResponseDto();
-		BeanUtils.copyProperties(userType,userTypeResponseDto);
-		List<UserResponseDto> userResponseDtoList = globalHelper.getUsers(userType).stream()
-				.map(globalHelper::userToUserResponseDto)
-				.toList();
-		userTypeResponseDto.setUsers(userResponseDtoList);
-		return userTypeResponseDto;
+		try {
+			UserTypeResponseDto userTypeResponseDto = new UserTypeResponseDto();
+			BeanUtils.copyProperties(userType, userTypeResponseDto);
+			List<UserResponseDto> userResponseDtoList = globalHelper.getUsers(userType).stream()
+					.map(globalHelper::userToUserResponseDto)
+					.toList();
+			userTypeResponseDto.setUsers(userResponseDtoList);
+			return userTypeResponseDto;
+		}catch (Exception e)
+		{
+			throw new RuntimeException(e.getMessage());
+		}
 	}
 	public UserType userTypeRequestDtoToUserType(UserTypeRequestDto userTypeRequestDto)
 	{
-		UserType userType = new UserType();
-		BeanUtils.copyProperties(userTypeRequestDto,userType);
-		userType.setTimeStamp(LocalDateTime.now());
-		return userType;
+		try {
+			UserType userType = new UserType();
+			BeanUtils.copyProperties(userTypeRequestDto, userType);
+			userType.setTimeStamp(LocalDateTime.now());
+			return userType;
+		}catch (Exception e)
+		{
+			throw new RuntimeException(e.getMessage());
+		}
 	}
 	public boolean isUserTypeExist(UserTypeRequestDto userTypeRequestDto)
 	{
-		String userTypeName = userTypeRequestDto.getUserTypeName();
-		String userTypeCode = userTypeRequestDto.getUserTypeCode();
-		UserType userType = userTypeRepository.findByUserTypeNameAndUserTypeCode(userTypeName,userTypeCode);
-		if(Objects.isNull(userType))
-			return false;
-		return userType.isStatus();
+		try {
+			String userTypeName = userTypeRequestDto.getUserTypeName();
+			String userTypeCode = userTypeRequestDto.getUserTypeCode();
+			UserType userType = userTypeRepository.findByUserTypeNameAndUserTypeCode(userTypeName, userTypeCode);
+			if (Objects.isNull(userType))
+				return false;
+			return userType.isStatus();
+		}catch (Exception e)
+		{
+			throw new RuntimeException(e.getMessage());
+		}
 	}
 }

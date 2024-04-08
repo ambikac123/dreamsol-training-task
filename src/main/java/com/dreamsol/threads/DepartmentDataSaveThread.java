@@ -1,10 +1,12 @@
 package com.dreamsol.threads;
 
+import com.dreamsol.dto.DepartmentRequestDto;
 import com.dreamsol.entities.Department;
 import com.dreamsol.repositories.DepartmentRepository;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Component;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Component
@@ -19,7 +21,15 @@ public class DepartmentDataSaveThread extends Thread
     }
     public void run()
     {
-        departmentRepository.saveAll(departmentList);
-        System.out.println("Data saved successfully!");
+        for(Department d : departmentList)
+        {
+            try {
+                departmentRepository.save(d);
+            }catch(Exception e)
+            {
+                continue;
+            }
+        }
+
     }
 }

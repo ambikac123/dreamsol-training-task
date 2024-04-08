@@ -4,7 +4,9 @@ import java.util.List;
 
 import com.dreamsol.response.UserExcelUploadResponse;
 import io.swagger.v3.oas.annotations.Hidden;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Size;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
@@ -53,7 +55,7 @@ public class UserController
 	public ResponseEntity<ApiResponse> createUser(
 			@Valid
 			@RequestPart("userRequestDto") UserRequestDto userRequestDto,
-			@RequestParam("file") MultipartFile file
+			@RequestParam("file") @NotNull(message = "File must not be null")MultipartFile file
 	)
 	{
 		return userService.createUser(userRequestDto,file,imagePath);
@@ -104,7 +106,7 @@ public class UserController
 			@RequestParam(value = "pageSize", defaultValue = "10", required = false) Integer pageSize,
 			@RequestParam(value = "sortBy", defaultValue = "userId", required = false) String sortBy,
 			@RequestParam(value = "sortDirection",defaultValue = "asc", required = false) String sortDirection,
-			@Pattern(regexp = "name|email|mobile|usertype|department")
+			@Pattern(regexp = "(name|email|mobile|usertype|department)", message = "Use any one value from [name/email/mobile/usertype/department]")
 			@RequestParam(value = "searchBy", defaultValue = "name", required = false) String searchBy,
 			@RequestParam(value ="keywords", defaultValue = "", required = false) String keywords
 	)
@@ -112,7 +114,7 @@ public class UserController
 		return userService.getAllUsers(pageNumber,pageSize,sortBy,sortDirection,searchBy,keywords);
 	}
 
-	@Operation(
+	/*@Operation(
 			summary = "Download user's image as string ",
 			description = "This api helps to download an image as string in Base64 format"
 		)
@@ -123,10 +125,10 @@ public class UserController
 	)
 	{
 		return userService.getUserImageAsBase64(imageName,imagePath);
-	}
+	}*/
 
 	@Operation(
-			summary = "Download user's image as file",
+			summary = "Download user image as file",
 			description = "This api helps to download an image as file"
 	)
 	@GetMapping(value = "/download-image-file/{imageName}")
@@ -136,19 +138,16 @@ public class UserController
 		return userService.downloadUserImageAsFile(imageName,imagePath);
 	}
 	@Operation(
-			summary = "Upload user's attachment (Supported Any File type)",
+			summary = "Upload any type attachment",
 			description = "This api helps to upload and save user's attachment"
 	)
 	@PostMapping(value = "/upload-file/{userId}" , consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-	public ResponseEntity<?> uploadFile(
-			@PathVariable("userId") Long userId,
-			@RequestParam("anyFile") MultipartFile anyFile
-	)
+	public ResponseEntity<?> uploadFile(@PathVariable("userId") Long userId, @RequestParam("anyFile") MultipartFile anyFile)
 	{
 		return userService.uploadUserDocument(anyFile,filePath,userId);
 	}
 	@Operation(
-			summary = "Download user's existing attachment (Supported Any File type)",
+			summary = "Download existing attachment",
 			description = "This api helps to download user's existing attachment."
 	)
 	@GetMapping(value = "/download-file/{fileName}", produces = MediaType.ALL_VALUE)
@@ -170,12 +169,16 @@ public class UserController
 			description = "This api will help to save the correct data into database"
 	)
 	@PostMapping(value = "/save-correct-list")
-	public ResponseEntity<?> saveCorrectList(@Valid @RequestBody List<UserExcelUploadResponse> correctList)
+	public ResponseEntity<?> saveCorrectList(
+			@Valid
+			@RequestBody
+			@Size(min = 1, message = "No users into the list")
+			List<UserExcelUploadResponse> correctList)
 	{
 		return userService.saveCorrectList(correctList);
 	}
 	@Operation(
-			summary = "download user's data as excel ",
+			summary = "download user data from database as excel ",
 			description = "This api helps to download user's matching data with keywords as excel file ."
 	)
 	@GetMapping(value = "/download-excel")
@@ -187,7 +190,7 @@ public class UserController
 		return userService.downloadUserDataInExcel(searchBy,keywords);
 	}
 	@Operation(
-			summary = "Download excel sample ",
+			summary = "Download user excel sample ",
 			description = "This api provides a sample for excel file to save bulk data"
 	)
 	@GetMapping(value = "/download-excel-sample")
@@ -197,7 +200,7 @@ public class UserController
 	}
 
 	@Operation(
-			summary = "Download auto generated dummy data as excel",
+			summary = "Download auto generated user dummy data as excel",
 			description = "It is used to get dummy data"
 	)
 	@GetMapping(value = "/download-excel-dummy", produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)

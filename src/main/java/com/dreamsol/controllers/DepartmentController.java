@@ -9,10 +9,12 @@ import com.dreamsol.dto.DepartmentResponseDto;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
 
+import jakarta.validation.constraints.Size;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -32,6 +34,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/departments")
 @Tag(name = "Department", description = "This is department API")
+@Validated
 public class DepartmentController {
     @Autowired
     private DepartmentService departmentService;
@@ -49,7 +52,10 @@ public class DepartmentController {
             description = "This api will replace the existing data by new one."
     )
     @PutMapping("/update/{deptId}")
-    public ResponseEntity<ApiResponse> updateDepartment(@Valid @RequestBody DepartmentRequestDto departmentDto, @PathVariable("deptId") Long departmentId) {
+    public ResponseEntity<ApiResponse> updateDepartment(
+            @Valid @RequestBody DepartmentRequestDto departmentDto,
+            @PathVariable("deptId") Long departmentId
+    ) {
         return departmentService.updateDepartment(departmentDto, departmentId);
     }
 
@@ -58,12 +64,13 @@ public class DepartmentController {
             description = "This api will take department id and delete the corresponding record."
     )
     @DeleteMapping("/delete/{deptId}")
-    public ResponseEntity<ApiResponse> deleteDepartment(@Valid @PathVariable("deptId") Long departmentId) {
+    public ResponseEntity<ApiResponse> deleteDepartment(
+             @PathVariable("deptId") Long departmentId) {
         return departmentService.deleteDepartment(departmentId);
     }
 
     @Operation(
-            summary = "Get a single department and related users info.",
+            summary = "Get a single department",
             description = "It is used to retrieve single data from database"
     )
     @GetMapping("/get/{deptId}")
@@ -72,18 +79,18 @@ public class DepartmentController {
     }
 
     @Operation(
-            summary = "Search departments containing keywords",
-            description = "It is used to search departments on the basis of department name/code containing given keyword"
+            summary = "Get all department records",
+            description = "It is used to find departments on the basis of department name/code containing given keyword"
     )
     @GetMapping("/search")
-    public ResponseEntity<AllDataResponse> searchDepartments(
+    public ResponseEntity<AllDataResponse> getAllDepartments(
             @RequestParam(value = "pageNumber", defaultValue = "0", required = false) @Min(0) Integer pageNumber,
             @RequestParam(value = "pageSize", defaultValue = "10", required = false) @Min(1) Integer pageSize,
             @RequestParam(value = "sortBy", defaultValue = "departmentId", required = false) String sortBy,
             @RequestParam(value = "sortDirection", defaultValue = "asc", required = false) String sortDirection,
             @RequestParam(value = "keywords", defaultValue = "", required = false) String keywords)
     {
-        return departmentService.searchDepartments(pageNumber,pageSize,sortBy,sortDirection,keywords);
+        return departmentService.getAllDepartments(pageNumber,pageSize,sortBy,sortDirection,keywords);
     }
 
     @Operation(
@@ -94,12 +101,15 @@ public class DepartmentController {
     public ResponseEntity<?> getCorrectAndIncorrectDepartments(@RequestParam("file") MultipartFile file) {
         return departmentService.getCorrectAndIncorrectDepartmentList(file);
     }
+
     @Operation(
             summary = "Save list of correct data",
             description = "This api will help to save the correct data into database"
     )
     @PostMapping(value = "/save-correct-list")
-    public ResponseEntity<?> saveCorrectList(@RequestBody List<DepartmentRequestDto> correctList)
+    public ResponseEntity<?> saveCorrectList(
+            @Valid @RequestBody @Size(min = 1, message = "No departments into the list")
+            List<DepartmentRequestDto> correctList)
     {
         return departmentService.saveCorrectList(correctList);
     }
@@ -125,7 +135,7 @@ public class DepartmentController {
     }
 
     @Operation(
-            summary = "Download excel sample ",
+            summary = "Download department excel sample ",
             description = "This api provides a sample for excel file to save bulk data"
     )
     @GetMapping(value = "/download-excel-sample")

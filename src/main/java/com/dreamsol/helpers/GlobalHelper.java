@@ -16,9 +16,7 @@ import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.InputMismatchException;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
-import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -44,14 +42,14 @@ public class GlobalHelper
     private DepartmentRepository departmentRepository;
     private UserTypeRepository userTypeRepository;
     private UserRepository userRepository;
-    public static final String REGEX_NAME = "[A-Za-z]{3,}(\\s[A-Za-z]{3,})*$";
-    public static final String NAME_ERROR_MESSAGE = " name should contain [a-z, A-Z or space(' ')] and should not contain digits[0-9], must start with at least 3 letters";
-    public static final String REGEX_EMAIL = "^[a-zA-Z]{3,}[0-9%-._]{0,}@[a-zA-Z]{2,}\\.[a-zA-Z]{2,}$";
-    public static final String EMAIL_ERROR_MESSAGE = " email should be in given format [starts with atleast 3 letters,then may followed by [digits, letters or symbols[% - . _]], followed by ( @ ) , atleast 2 letters, followed by dot(.), followed by atleast 2 letters ]";
+    public static final String REGEX_NAME = "^[A-Za-z]{3,}(\\s[A-Za-z]{3,})*$";
+    public static final String NAME_ERROR_MESSAGE = "name must contain [a-z, A-Z or space(' ')] and must start with at least 3 letters";
+    public static final String REGEX_EMAIL = "^[a-zA-Z0-9_+&*-]+(?:\\.[a-zA-Z0-9_+&*-]+)*@(?:[a-zA-Z0-9-]+\\.)+[a-zA-Z]{2,}$";
+    public static final String EMAIL_ERROR_MESSAGE = "email should be in given format [user.name@example-domain.com] allowed characters are : [a-z,A-Z,0-9,_,+,&,*,-]";
     public static final String REGEX_MOBILE = "^[6-9]\\d{9}$";
-    public static final String MOBILE_ERROR_MESSAGE = " mobile no. invalid, must start with digits [6-9] and must be 10 digits long";
+    public static final String MOBILE_ERROR_MESSAGE = "mobile no. invalid, must start with digits [6-9] and must be 10 digits long";
     public static final String REGEX_CODE = "^[a-zA-Z]{2,7}\\d{0,3}$";
-    public static final String CODE_ERROR_MESSAGE = " code can contain [a-z, A-Z, 0-9] and must start with at least 2 letters and followed by maximum 3 digits";
+    public static final String CODE_ERROR_MESSAGE = "code can contain [a-z, A-Z, 0-9] and must start with at least 2 letters and followed by maximum 3 digits";
     private ApiResponse apiResponse;
     public boolean isValidName(String name)
     {
@@ -403,15 +401,14 @@ public class GlobalHelper
             ExcelUploadResponse excelUploadResponse = new ExcelUploadResponse();
             excelUploadResponse.setCorrectList(correctList);
             excelUploadResponse.setIncorrectList(incorrectList);
+            excelUploadResponse.setMessage("Process completed successfully, No. of correct items: "+correctList.size()+", No. of incorrect items: "+incorrectList.size());
             return excelUploadResponse;
         } catch (Exception e)
         {
-            return null;
+            ExcelUploadResponse excelUploadResponse = new ExcelUploadResponse();
+            excelUploadResponse.setMessage("Process failed!, Reason: "+e.getMessage());
+            return excelUploadResponse;
         }
     }
 
-    public boolean isEqualMaps(Map<String,String> map1, Map<Integer,String> map2)
-    {
-        return map1.values().containsAll(map2.values());
-    }
 }

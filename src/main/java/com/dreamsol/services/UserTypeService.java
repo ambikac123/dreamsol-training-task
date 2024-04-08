@@ -30,8 +30,7 @@ public interface UserTypeService
 	UserType getUserType(UserTypeRequestDto userTypeRequestDto);
 	UserTypeResponseDto userTypeToUserTypeResponseDto(UserType userType);
 	boolean isUserTypeExist(UserTypeRequestDto userTypeRequestDto);
-
     UserType getUserType(String userTypeName, String userTypeCode);
-
     ResponseEntity<?> downloadDummyData(int noOfRecords);
+
 }

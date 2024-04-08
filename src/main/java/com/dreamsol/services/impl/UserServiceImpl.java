@@ -5,7 +5,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.Base64;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -84,7 +83,9 @@ public class UserServiceImpl implements UserService
 	{
 		try
         {
-            User user = getUser(userRequestDto);
+            if(file.getOriginalFilename().isEmpty())
+                throw new ResourceNotFoundException("Image file not selected!");
+            User user = getUser(userRequestDto.getUserMobile(),userRequestDto.getUserEmail());
             if(Objects.isNull(user))
             {
                 UserType userType = userTypeService.getUserType(userRequestDto.getUserType());
@@ -143,11 +144,11 @@ public class UserServiceImpl implements UserService
                 user.setTimeStamp(LocalDateTime.now());
                 try {
                     userRepository.save(user);
+                    return ResponseEntity.status(HttpStatus.OK).body(new ApiResponse("user with id " + userId + " updated successfully!", true));
                 } catch (DataAccessException e) {
                     imageHelper.deleteImage(userImage.getDuplicateImageName(), imagePath);
                     return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ApiResponse("user with id " + userId + " not updated, Reason: " + e.getMessage(), false));
                 }
-                return ResponseEntity.status(HttpStatus.OK).body(new ApiResponse("user with id " + userId + " updated successfully!", true));
             }
             return ResponseEntity.status(HttpStatus.OK).body(new ApiResponse("No user found!",false));
         }
@@ -162,11 +163,14 @@ public class UserServiceImpl implements UserService
         try
         {
             User user = getUser(userId);
-            if(!Objects.isNull(user.getUserImage())) {
-                String duplicateImageName = user.getUserImage().getDuplicateImageName();
-                imageHelper.deleteImage(duplicateImageName, imagePath);
+            //userRepository.delete(user);
+            user.setStatus(false);
+            UserImage userImage = user.getUserImage();
+            if(!Objects.isNull(userImage)) {
+                userImage.setStatus(false);
+               /* String duplicateImageName = user.getUserImage().getDuplicateImageName();
+                imageHelper.deleteImage(duplicateImageName, imagePath);*/
             }
-            userRepository.delete(user);
             return ResponseEntity.ok(new ApiResponse("User deleted successfully!!", true));
         }catch(Exception e) {
             return ResponseEntity.ok(new ApiResponse("User not deleted !!", false));
@@ -175,6 +179,8 @@ public class UserServiceImpl implements UserService
     public ResponseEntity<?> getSingleUser(Long userId)
     {
         User user = getUser(userId);
+        if(Objects.isNull(user))
+            throw new ResourceNotFoundException("user","userId",userId);
         UserSingleDataResponseDto userSingleDataResponseDto = userToUserSingleDataResponseDto(user);
         return ResponseEntity.ok(userSingleDataResponseDto);
     }
@@ -192,17 +198,17 @@ public class UserServiceImpl implements UserService
             switch(x)
             {
                 case "name/email":
-                    page = userRepository.findByUserNameLikeOrUserEmailLike("%" + keywords + "%", "%" + keywords + "%",pageable);
+                    page = userRepository.findByStatusTrueAndUserNameLikeOrStatusTrueAndUserEmailLike("%" + keywords + "%", "%" + keywords + "%",pageable);
                     break;
                 case "mobile":
                     page = userRepository.findByUserMobileLikeOrderByUserId("%"+keywords+"%",pageable);
                     break;
                 case "usertype":
-                    List<UserType> userTypeList = userTypeRepository.findByUserTypeNameLikeOrUserTypeCodeLike("%" + keywords + "%", "%" + keywords + "%");
+                    List<UserType> userTypeList = userTypeRepository.findByStatusTrueAndUserTypeNameLikeOrStatusTrueAndUserTypeCodeLike("%" + keywords + "%", "%" + keywords + "%");
                     page = userRepository.findAllByUserTypeIn(userTypeList,pageable);
                     break;
                 case "department":
-                    List<Department> departmentList = departmentRepository.findByDepartmentNameLikeOrDepartmentCodeLike("%" + keywords + "%", "%" + keywords + "%");
+                    List<Department> departmentList = departmentRepository.findByStatusTrueAndDepartmentNameLikeOrStatusTrueAndDepartmentCodeLike("%" + keywords + "%", "%" + keywords + "%");
                     page = userRepository.findAllByDepartmentIn(departmentList,pageable);
                     break;
                 default:
@@ -230,12 +236,13 @@ public class UserServiceImpl implements UserService
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ApiResponse(e.getMessage(),false));
         }
 	}
-    public ResponseEntity<String> getUserImageAsBase64(String imageName,String imagePath)
+    // This method will return the given image as Base64 string
+    /*public ResponseEntity<String> getUserImageAsBase64String(String imageName,String imagePath)
     {
         byte[] fileBytes = GlobalHelper.getResource(imageName,imagePath);
         String fileString = Base64.getEncoder().encodeToString(fileBytes);
         return ResponseEntity.status(HttpStatus.OK).body(fileString);
-    }
+    }*/
     public ResponseEntity<Resource> downloadUserImageAsFile(String imageName, String imagePath)
     {
         try
@@ -252,25 +259,25 @@ public class UserServiceImpl implements UserService
             throw new ResourceNotFoundException(e.getMessage());
         }
     }
-    public ResponseEntity<?> getCorrectAndIncorrectUserList(MultipartFile excelFile)
+    public ResponseEntity<?> getCorrectAndIncorrectUserList(MultipartFile file)
     {
-        if(ExcelHelper.checkExcelFormat(excelFile))
+        if(ExcelHelper.checkExcelFormat(file))
         {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ApiResponse("Invalid file format!",false));
+            String fileName = file.getOriginalFilename();
+            String fileExtension = fileName.substring(fileName.lastIndexOf('.')+1);
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ApiResponse("Invalid file format! required excel file but found "+fileExtension,false));
         }
         ExcelHelper<UserExcelUploadResponse> excelHelper = new ExcelHelper<>();
         Map<String,String> headersMap = ExcelHeadersInfo.getUserHeadersMap();
-        List<UserExcelUploadResponse> list = excelHelper.convertExcelToList(excelFile,headersMap,UserExcelUploadResponse.class);
+        List<UserExcelUploadResponse> list = excelHelper.convertExcelToList(file,headersMap,UserExcelUploadResponse.class);
         if(Objects.isNull(list))
-            return  ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ApiResponse("invalid excel format",false));
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ApiResponse("No suitable excel found, required user but found other",false));
         ExcelUploadResponse excelUploadResponse = globalHelper.getCorrectAndIncorrectList(list,UserExcelUploadResponse.class);
         return ResponseEntity.status(HttpStatus.OK).body(excelUploadResponse);
     }
     public ResponseEntity<?> saveCorrectList(List<UserExcelUploadResponse> correctList)
     {
         try {
-            if(correctList.isEmpty())
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ApiResponse("No users into the list",false));
             List<User> userList = correctList.stream().map(this::userExcelUploadResponseToUser).toList();
             userRepository.saveAll(userList);
             return ResponseEntity.status(HttpStatus.CREATED).body(new ApiResponse("Data added successfully!",true));
@@ -372,7 +379,11 @@ public class UserServiceImpl implements UserService
 
     public User getUser(Long userId)
     {
-        return userRepository.findById(userId).orElseThrow(()->new ResourceNotFoundException("User","userId",userId));
+        User user = userRepository.findById(userId).orElseThrow(()->new ResourceNotFoundException("User","userId",userId));
+        if(user.isStatus())
+            return user;
+        else
+            return null;
     }
     public User getUser(UserRequestDto userRequestDto, UserType userType, Department department, UserImage userImage)
     {
@@ -384,11 +395,13 @@ public class UserServiceImpl implements UserService
         return user;
     }
 
-    public User getUser(UserRequestDto userRequestDto)
+    public User getUser(long userMobile, String  userEmail)
     {
-        long userMobile = userRequestDto.getUserMobile();
-        String userEmail = userRequestDto.getUserEmail();
-        return userRepository.findByUserMobileAndUserEmail(userMobile,userEmail);
+        User user = userRepository.findByUserMobileAndUserEmail(userMobile,userEmail);
+        if(!Objects.isNull(user) && user.isStatus())
+            return user;
+        else
+            return null;
     }
     public UserSingleDataResponseDto userToUserSingleDataResponseDto(User user)
     {

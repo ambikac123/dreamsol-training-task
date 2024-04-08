@@ -2,6 +2,7 @@ package com.dreamsol.services.impl;
 
 import java.io.ByteArrayInputStream;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -73,6 +74,8 @@ public class DepartmentServiceImpl implements DepartmentService
 	{
 		try{
 			Department department = getDepartment(departmentId);
+			if(Objects.isNull(department))
+				throw new ResourceNotFoundException("department","departmentId",departmentId);
 			BeanUtils.copyProperties(departmentRequestDto,department);
 			department.setTimeStamp(LocalDateTime.now());
 			departmentRepository.save(department);
@@ -87,12 +90,15 @@ public class DepartmentServiceImpl implements DepartmentService
 		try
 		{
 			Department department = getDepartment(departmentId);
+			if(Objects.isNull(department))
+				throw new ResourceNotFoundException("department","departmentId",departmentId);
 			List<User> userList = globalHelper.getUsers(department);
 			for(User user : userList)
 			{
 				user.setDepartment(null);
 			}
-			departmentRepository.delete(department);
+			department.setStatus(false);
+			//departmentRepository.delete(department);
 			return ResponseEntity.status(HttpStatus.OK).body(new ApiResponse("department with id "+departmentId+" deleted successfully!", true));
 		}catch(Exception e)
 		{
@@ -104,6 +110,8 @@ public class DepartmentServiceImpl implements DepartmentService
 		try
 		{
 			Department department = getDepartment(departmentId);
+			if(Objects.isNull(department))
+				throw new ResourceNotFoundException("department","departmentId",departmentId);
 			DepartmentResponseDto departmentResponseDto = departmentToDepartmentResponseDto(department);
 			return ResponseEntity.status(HttpStatus.OK).body(departmentResponseDto);
 		}catch(Exception e)
@@ -111,12 +119,12 @@ public class DepartmentServiceImpl implements DepartmentService
 			throw new ResourceNotFoundException("department","departmentId",departmentId);
 		}
 	}
-	public ResponseEntity<AllDataResponse> searchDepartments(Integer pageNumber,Integer pageSize,String sortBy,String sortDirection,String keywords)
+	public ResponseEntity<AllDataResponse> getAllDepartments(Integer pageNumber,Integer pageSize,String sortBy,String sortDirection,String keywords)
 	{
 		Sort sort = sortDirection.equalsIgnoreCase("asc")?Sort.by(sortBy).ascending():Sort.by(sortBy).descending();
 
 		Pageable pageable = PageRequest.of(pageNumber,pageSize, sort);
-		Page<Department> page = departmentRepository.findByDepartmentNameLikeOrDepartmentCodeLike("%"+keywords+"%","%"+keywords+"%",pageable);
+		Page<Department> page = departmentRepository.findByStatusTrueAndDepartmentNameLikeOrStatusTrueAndDepartmentCodeLike("%"+keywords+"%","%"+keywords+"%",pageable);
 		List<Department> departmentList = page.getContent();
 		if(departmentList.isEmpty())
 			throw new ResourceNotFoundException("No contents available!");
@@ -136,13 +144,15 @@ public class DepartmentServiceImpl implements DepartmentService
 	{
 			if (ExcelHelper.checkExcelFormat(file))
 			{
-				return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ApiResponse("Invalid file format", false));
+				String fileName = file.getOriginalFilename();
+				String fileExtension = fileName.substring(fileName.lastIndexOf('.')+1);
+				return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ApiResponse("Invalid file format! required excel file but found "+fileExtension,false));
 			}
 			ExcelHelper<DepartmentExcelUploadResponse> excelHelper = new ExcelHelper<>();
 			Map<String,String> headersMap =  ExcelHeadersInfo.getDepartmentHeadersMap();
 			List<DepartmentExcelUploadResponse> list = excelHelper.convertExcelToList(file,headersMap,DepartmentExcelUploadResponse.class);
 			if(Objects.isNull(list))
-				return  ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ApiResponse("invalid excel format",false));
+				return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ApiResponse("No suitable excel found, required department but found other",false));
 			ExcelUploadResponse excelUploadResponse = globalHelper.getCorrectAndIncorrectList(list,DepartmentExcelUploadResponse.class);
 			return ResponseEntity.ok(excelUploadResponse);
 	}
@@ -152,7 +162,24 @@ public class DepartmentServiceImpl implements DepartmentService
 			if(correctList.isEmpty())
 				return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ApiResponse("No departments into the list",false));
 			List<Department> departmentList = correctList.stream().map(this::departmentRequestDtoToDepartment).toList();
-			departmentRepository.saveAll(departmentList);
+			List<DepartmentRequestDto> dataNotSavedList = new ArrayList<>();
+			for(Department d : departmentList)
+			{
+				try {
+					departmentRepository.save(d);
+				}catch(Exception e)
+				{
+					DepartmentRequestDto dto = new DepartmentRequestDto();
+					BeanUtils.copyProperties(d,dto);
+					dataNotSavedList.add(dto);
+				}
+			}
+			if(!dataNotSavedList.isEmpty()) {
+				ExcelUploadResponse response = new ExcelUploadResponse();
+				response.setIncorrectList(dataNotSavedList);
+				response.setMessage(dataNotSavedList.size()+" entity not saved into database");
+				return ResponseEntity.status(HttpStatus.OK).body(response);
+			}
 			return ResponseEntity.status(HttpStatus.CREATED).body(new ApiResponse("Data added successfully!",true));
 		}catch (Exception e)
 		{
@@ -163,7 +190,7 @@ public class DepartmentServiceImpl implements DepartmentService
 	{
 		Map<String,String> headersMap = ExcelHeadersInfo.getDepartmentHeadersMap();
 		String sheetName = "department_data";
-		List<Department> departmentList = departmentRepository.findAll();
+		List<Department> departmentList = departmentRepository.findAllByStatusTrue();
 		if(!departmentList.isEmpty())
 		{
 			ByteArrayInputStream byteArrayInputStream = excelHelper.convertListToExcel(Department.class,departmentList, headersMap, sheetName);
@@ -211,13 +238,25 @@ public class DepartmentServiceImpl implements DepartmentService
 
 	public Department getDepartment(Long departmentId)
 	{
-		return departmentRepository.findById(departmentId).orElseThrow(()->new ResourceNotFoundException("department","departmentId",departmentId));
+		Department department = departmentRepository.findById(departmentId).orElseThrow(()->new ResourceNotFoundException("department","departmentId",departmentId));
+		if(department.isStatus())
+			return department;
+		else
+			return null;
 	}
 	public Department getDepartment(DepartmentRequestDto departmentRequestDto)
 	{
 		String departmentName = departmentRequestDto.getDepartmentName();
 		String departmentCode = departmentRequestDto.getDepartmentCode();
 		return departmentRepository.findByDepartmentNameAndDepartmentCode(departmentName,departmentCode);
+	}
+	public Department getDepartment(String departmentName, String departmentCode)
+	{
+		Department department = departmentRepository.findByDepartmentNameAndDepartmentCode(departmentName,departmentCode);
+		if(!Objects.isNull(department) && department.isStatus())
+			return department;
+		else
+			return null;
 	}
 	public void saveDataByBatchProcessing(List<Department> departmentList)
 	{
@@ -232,7 +271,6 @@ public class DepartmentServiceImpl implements DepartmentService
         {
 			int endIndex = Math.min(count + batchSize, totalSize);
 			List<Department> batch = departmentList.subList(count, endIndex);
-
 			executor.submit(new DepartmentDataSaveThread(departmentRepository, batch));
 		}
 		executor.shutdown();
@@ -242,15 +280,6 @@ public class DepartmentServiceImpl implements DepartmentService
 		} catch (InterruptedException e) {
 			throw new RuntimeException(e.getMessage());
 		}
-	}
-	public boolean isDepartmentExist(DepartmentRequestDto departmentRequestDto)
-	{
-		String departmentName = departmentRequestDto.getDepartmentName();
-		String departmentCode = departmentRequestDto.getDepartmentCode();
-		Department department = getDepartment(departmentName,departmentCode);
-		if(Objects.isNull(department))
-			return false;
-		return department.isStatus();
 	}
 
 	public Department departmentRequestDtoToDepartment(DepartmentRequestDto departmentRequestDto)
@@ -271,20 +300,13 @@ public class DepartmentServiceImpl implements DepartmentService
 		departmentResponseDto.setUsers(userResponseDtoList);
 		return departmentResponseDto;
 	}
-	public Department getDepartment(String departmentName, String departmentCode)
+	public boolean isDepartmentExist(DepartmentRequestDto departmentRequestDto)
 	{
-		return departmentRepository.findByDepartmentNameAndDepartmentCode(departmentName,departmentCode);
+		String departmentName = departmentRequestDto.getDepartmentName();
+		String departmentCode = departmentRequestDto.getDepartmentCode();
+		Department department = getDepartment(departmentName,departmentCode);
+		if(Objects.isNull(department))
+			return false;
+		return department.isStatus();
 	}
 }
-/*public boolean isExistName(String name)
-	{
-		return Objects.isNull(departmentRepository.findByDepartmentName(name));
-	}
-	public boolean isExistCode(String code)
-	{
-		return Objects.isNull(departmentRepository.findByDepartmentCode(code));
-	}
-	public boolean isActive(boolean status)
-	{
-		return status;
-	}*/

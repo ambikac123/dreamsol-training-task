@@ -5,7 +5,6 @@ import com.dreamsol.helpers.GlobalHelper;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
-import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
@@ -18,18 +17,18 @@ import lombok.Setter;
 @NoArgsConstructor
 public class UserRequestDto 
 {
-	@NotEmpty(message = "user name should not be empty")
+	@NotNull(message = "Missing field user name from input source")
 	@Size(min = 3, max=100, message = "user name should contain min of 3 and max of 100 characters")
-	@Pattern(regexp = GlobalHelper.REGEX_NAME, message = "user"+GlobalHelper.NAME_ERROR_MESSAGE)
+	@Pattern(regexp = GlobalHelper.REGEX_NAME, message = GlobalHelper.NAME_ERROR_MESSAGE)
 	private String userName;
 
-	@NotEmpty(message = "Email should not be empty!!")
-	@Size(min = 3, max = 100, message = "email must be 10 to 100 characters long")
-	@Email(regexp = GlobalHelper.REGEX_EMAIL, message = "user"+GlobalHelper.EMAIL_ERROR_MESSAGE)
+	@NotNull(message = "Missing field user email from input source")
+	@Size(min = 8, max = 100, message = "email must be 8 to 100 characters long")
+	@Email(regexp = GlobalHelper.REGEX_EMAIL, message = GlobalHelper.EMAIL_ERROR_MESSAGE)
 	private String userEmail;
 
-	@Min(value = 6000000000L, message = "user"+GlobalHelper.MOBILE_ERROR_MESSAGE)
-	@Max(value = 9999999999L, message = "user"+GlobalHelper.MOBILE_ERROR_MESSAGE)
+	@Min(value = 6000000000L, message = GlobalHelper.MOBILE_ERROR_MESSAGE)
+	@Max(value = 9999999999L, message = GlobalHelper.MOBILE_ERROR_MESSAGE)
 	private long userMobile;
 
 	private boolean status;

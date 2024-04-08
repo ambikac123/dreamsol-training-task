@@ -11,6 +11,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+import java.nio.file.FileSystemException;
 import java.sql.SQLIntegrityConstraintViolationException;
 import java.util.HashMap;
 import java.util.InputMismatchException;
@@ -82,6 +83,22 @@ public class GlobalExceptionHandler
 	@ExceptionHandler(InputMismatchException.class)
 	public ResponseEntity<ApiResponse> inputMismatchExceptionHandler(InputMismatchException e)
 	{
+		apiResponse.setMessage(e.getMessage());
+		apiResponse.setSuccess(false);
+		return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(apiResponse);
+	}
+	@ExceptionHandler(RuntimeException.class)
+	public ResponseEntity<ApiResponse> runtimeExceptionHandler(RuntimeException e)
+	{
+		apiResponse = new ApiResponse();
+		apiResponse.setMessage(e.getMessage());
+		apiResponse.setSuccess(false);
+		return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(apiResponse);
+	}
+	@ExceptionHandler(FileSystemException.class)
+	public ResponseEntity<ApiResponse> fileSystemExceptionHandler(FileSystemException e)
+	{
+		apiResponse = new ApiResponse();
 		apiResponse.setMessage(e.getMessage());
 		apiResponse.setSuccess(false);
 		return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(apiResponse);

@@ -25,7 +25,7 @@ public interface UserService
 	ResponseEntity<?> getCorrectAndIncorrectUserList(MultipartFile excelFile);
 	ResponseEntity<?> saveCorrectList(List<UserExcelUploadResponse> correctList);
 	ResponseEntity<Resource> downloadUserDataInExcel(String searchBy,String keywords);
-	ResponseEntity<String> getUserImageAsBase64(String imageName,String imagePath);
+	//ResponseEntity<String> getUserImageAsBase64String(String imageName,String imagePath);
 	ResponseEntity<Resource> downloadUserImageAsFile(String imageName, String imagePath);
 	ResponseEntity<?> uploadUserDocument(MultipartFile anyFile,String filePath,Long userId);
 	ResponseEntity<Resource> downloadUserDocument(String fileName,String filePath);
@@ -35,7 +35,7 @@ public interface UserService
 
 	User getUser(Long userId);
 	User getUser(UserRequestDto userRequestDto, UserType userType, Department department, UserImage userImage);
-	User getUser(UserRequestDto userRequestDto);
+	User getUser(long userMobile, String userEmail);
 	UserSingleDataResponseDto userToUserSingleDataResponseDto(User user);
 	ResponseEntity<?> downloadDummyData(int noOfRecords);
 }

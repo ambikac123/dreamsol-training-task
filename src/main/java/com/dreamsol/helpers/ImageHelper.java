@@ -13,6 +13,8 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Arrays;
+import java.util.List;
 import java.util.UUID;
 
 @Component
@@ -21,21 +23,22 @@ public class ImageHelper
 {
     public UserImage getImage(MultipartFile file,String imagePath)
     {
+        List<String> imageExtensionList = Arrays.asList(".jpg",".jpeg",".png",".gif",".bmp",".tiff",".svg");
         String fileName = file.getOriginalFilename();
         String fileExtension = fileName != null ? fileName.substring(fileName.lastIndexOf('.')) : "";
-        if(fileExtension.equals(".jpg")||fileExtension.equals(".jpeg")||fileExtension.equals(".png"))
+
+        if(imageExtensionList.contains(fileExtension))
         {
             return saveImage(file,fileName,fileExtension,imagePath);
         }
         else{
-            throw new InvalidFileNameException("File Extension: ","Image extension not supported!");
+            throw new InvalidFileNameException("File Extension: ","Uploaded file format not supported! allowed formats are: [jpg, jpeg, png, gif, bmp, tiff and svg]");
         }
     }
     public UserImage saveImage(MultipartFile imageFile, String fileName, String fileExtension,String destinationPath)
     {
-        try {
-
-            // file path
+        try
+        {
             String randomID = UUID.randomUUID().toString();
             String newFileName = randomID + fileExtension;
             String newFilePath = destinationPath + newFileName;
@@ -47,8 +50,9 @@ public class ImageHelper
             userImage.setDuplicateImageName(newFileName);
             userImage.setStatus(true);
             return userImage;
-        }catch(IOException e){
-            throw new ImageNotUploadedException(e.getMessage());
+        }
+        catch(IOException e){
+            throw new ImageNotUploadedException("Image not saved into the specified directory["+destinationPath+"], Error Reason: "+e.getMessage());
         }
     }
     public void deleteImage(String fileName,String destinationPath)
@@ -61,5 +65,4 @@ public class ImageHelper
             throw new ResourceNotFoundException("Image",fileName,0);
         }
     }
-
 }

@@ -26,11 +26,9 @@ public interface UserRepository extends JpaRepository<User, Long>
             "LEFT JOIN FETCH u.documentList d " +
             "WHERE CAST(u.userMobile AS string) LIKE CONCAT('%', :mobileNo, '%') " +
             "ORDER BY u.userId")
-    Page<User> findByUserMobileLikeOrderByUserId(
-            @Param("mobileNo") String mobileNo,
-            Pageable pageable);
+    Page<User> findByUserMobileLikeOrderByUserId(@Param("mobileNo") String mobileNo, Pageable pageable);
     List<User> findByUserNameLikeOrUserEmailLike(String userName, String userEmail);
-    Page<User> findByUserNameLikeOrUserEmailLike(String userName, String userEmail, Pageable pageable);
+    //Page<User> findByUserNameLikeOrUserEmailLike(String userName, String userEmail, Pageable pageable);
     List<User> findAllByUserTypeIn(List<UserType> userTypeList);
     Page<User> findAllByUserTypeIn(List<UserType> userTypeList,Pageable pageable);
     List<User> findAllByDepartmentIn(List<Department> departmentList);
@@ -38,9 +36,12 @@ public interface UserRepository extends JpaRepository<User, Long>
     List<User> findAllByUserType(UserType userType);
     List<User> findAllByDepartment(Department department);
 
-    User findByUserName(String s);
+    //User findByUserName(String s);
 
     User findByUserMobile(Long aLong);
 
     User findByUserEmail(String s);
+
+    Page<User> findByStatusTrueAndUserNameLikeOrStatusTrueAndUserEmailLike(String s, String s1, Pageable pageable);
+
 }
