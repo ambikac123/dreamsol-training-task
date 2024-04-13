@@ -8,6 +8,8 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinTable;
+import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
@@ -40,7 +42,10 @@ public class User
 	@Column(length = 100,unique = true,nullable = false)
 	private String userEmail;
 
-	private LocalDateTime timeStamp;
+	@Column(unique = true,nullable = false)
+	private String userPassword;
+
+	private LocalDateTime timeStamp; 
 
 	@Column(nullable = false)
 	private boolean status;
@@ -59,6 +64,10 @@ public class User
 
 	@OneToMany(mappedBy = "user")
 	private List<Document> documentList;
+
+	@ManyToMany(fetch = FetchType.EAGER)
+	@JoinTable(name = "user_role", joinColumns = @JoinColumn(name = "userId"), inverseJoinColumns = @JoinColumn(name = "roleId"))
+	private List<Role> roles;
 
 }
 

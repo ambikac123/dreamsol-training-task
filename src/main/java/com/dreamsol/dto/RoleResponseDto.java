@@ -10,7 +10,6 @@ import java.time.LocalDateTime;
 public class RoleResponseDto
 {
     private String roleName;
-    private String description;
     private boolean status;
     private LocalDateTime timeStamp;
 }

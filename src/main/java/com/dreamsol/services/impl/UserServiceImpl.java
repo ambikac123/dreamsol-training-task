@@ -12,11 +12,14 @@ import java.util.stream.Collectors;
 
 import com.dreamsol.dto.DepartmentSingleDataResponseDto;
 import com.dreamsol.dto.DocumentSingleDataResponseDto;
+import com.dreamsol.dto.RoleRequestDto;
+import com.dreamsol.dto.RoleResponseDto;
 import com.dreamsol.dto.UserRequestDto;
 import com.dreamsol.dto.UserSingleDataResponseDto;
 import com.dreamsol.dto.UserTypeSingleDataResponseDto;
 import com.dreamsol.entities.Department;
 import com.dreamsol.entities.Document;
+import com.dreamsol.entities.Role;
 import com.dreamsol.entities.User;
 import com.dreamsol.entities.UserImage;
 import com.dreamsol.entities.UserType;
@@ -27,6 +30,7 @@ import com.dreamsol.helpers.ImageHelper;
 import com.dreamsol.helpers.PageInfo;
 import com.dreamsol.repositories.DepartmentRepository;
 import com.dreamsol.repositories.DocumentRepository;
+import com.dreamsol.repositories.RoleRepository;
 import com.dreamsol.repositories.UserImageRepository;
 import com.dreamsol.repositories.UserRepository;
 import com.dreamsol.repositories.UserTypeRepository;
@@ -54,6 +58,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -72,6 +77,7 @@ public class UserServiceImpl implements UserService
     private UserTypeRepository userTypeRepository;
     private DocumentRepository documentRepository;
     private UserImageRepository userImageRepository;
+    private RoleRepository roleRepository;
     private DocumentService documentService;
     private DepartmentService departmentService;
     private UserTypeService userTypeService;
@@ -79,6 +85,7 @@ public class UserServiceImpl implements UserService
     private GlobalHelper globalHelper;
     private ExcelHelper excelHelper;
     private ApiResponse apiResponse;
+    private PasswordEncoder passwordEncoder;
 	public ResponseEntity<ApiResponse> createUser(UserRequestDto userRequestDto, MultipartFile file,String imagePath)
 	{
 		try
@@ -99,6 +106,11 @@ public class UserServiceImpl implements UserService
                 userImage.setTimeStamp(LocalDateTime.now());
                 user = getUser(userRequestDto,userType,department,userImage);
                 user.setTimeStamp(LocalDateTime.now());
+                List<Role> roleList = userRequestDto.getRoles()
+                        .stream()
+                        .map((roleRequestDto)->roleRequestDtoToRole(roleRequestDto))
+                        .toList();
+                user.setRoles(roleList);
                 try{
                     userRepository.save(user);
                 }catch (DataAccessException e)
@@ -112,7 +124,7 @@ public class UserServiceImpl implements UserService
 		}
         catch(Exception e)
         {
-            return ResponseEntity.ok(new ApiResponse(e.getMessage(),false));
+            return ResponseEntity.ok(new ApiResponse("Error occured while creating new user, Reason: "+e.getMessage(),false));
         }
 	}
     public ResponseEntity<ApiResponse> updateUser(UserRequestDto userRequestDto,MultipartFile file,String imagePath,Long userId)
@@ -142,6 +154,11 @@ public class UserServiceImpl implements UserService
                 user = getUser(userRequestDto, userType, department, userImage);
                 user.setUserId(userId);
                 user.setTimeStamp(LocalDateTime.now());
+                List<Role> roleList = userRequestDto.getRoles()
+                        .stream()
+                        .map((roleRequestDto)->roleRequestDtoToRole(roleRequestDto))
+                        .toList();
+                user.setRoles(roleList);
                 try {
                     userRepository.save(user);
                     return ResponseEntity.status(HttpStatus.OK).body(new ApiResponse("user with id " + userId + " updated successfully!", true));
@@ -389,6 +406,7 @@ public class UserServiceImpl implements UserService
     {
         User user = new User();
         BeanUtils.copyProperties(userRequestDto,user);
+        user.setUserPassword(passwordEncoder.encode(userRequestDto.getUserPassword()));
         user.setUserType(userType);
         user.setDepartment(department);
         user.setUserImage(userImage);
@@ -416,6 +434,12 @@ public class UserServiceImpl implements UserService
                         .toUriString();
                 userSingleDataResponseDto.setImageName(downloadLink);
             }
+            if(!user.getRoles().isEmpty())
+            {
+                List<RoleResponseDto> roleResponseDtoList = user.getRoles()
+                        .stream().map((role)->roleToRoleResponseDto(role)).toList();
+                userSingleDataResponseDto.setRoles(roleResponseDtoList);
+            }
             if(!Objects.isNull(user.getUserType()))
             {
                 UserTypeSingleDataResponseDto userTypeSingleDataResponseDto = new UserTypeSingleDataResponseDto();
@@ -432,7 +456,8 @@ public class UserServiceImpl implements UserService
 
             if(!user.getDocumentList().isEmpty())
             {
-                List<DocumentSingleDataResponseDto> documentList = user.getDocumentList().stream().map(documentService::documentToDocumentSingleDataResponseDto).toList();
+                List<DocumentSingleDataResponseDto> documentList = user.getDocumentList()
+                        .stream().map(documentService::documentToDocumentSingleDataResponseDto).toList();
                 userSingleDataResponseDto.setAttachments(documentList);
             }
 
@@ -478,5 +503,23 @@ public class UserServiceImpl implements UserService
             userExcelUploadResponse.setDepartmentCode("N/A");
         }
         return userExcelUploadResponse;
+    }
+    public Role roleRequestDtoToRole(RoleRequestDto roleRequestDto)
+    {
+        try {
+            Role role = roleRepository.findByRoleName(roleRequestDto.getRoleName());
+            if (!Objects.isNull(role) && role.isStatus())
+                return role;
+            throw new ResourceNotFoundException("User Role", "roleName:" + roleRequestDto.getRoleName(), 0);
+        }catch(Exception e)
+        {
+            throw new RuntimeException("Error occurred while varifying user roles, Reason: "+e.getMessage());
+        }
+    }
+    public RoleResponseDto roleToRoleResponseDto(Role role)
+    {
+        RoleResponseDto roleResponseDto = new RoleResponseDto();
+        BeanUtils.copyProperties(role,roleResponseDto);
+        return roleResponseDto;
     }
 }

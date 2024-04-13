@@ -1,3 +1,4 @@
+/*
 package com.dreamsol.securities;
 
 import org.springframework.context.annotation.Bean;
@@ -54,16 +55,6 @@ public class FormBasedAuthenticationInMemoryConfig
                         .anyRequest()
                         .fullyAuthenticated()
                 ).formLogin(Customizer.withDefaults()).build();
-
-       /*return http.csrf(csrf->csrf.disable())
-               .authorizeHttpRequests(auth->auth
-                       .requestMatchers("/api/departments/**")
-                       .hasRole("ADMIN")
-                       .requestMatchers("/api/users/get-all")
-                       .hasRole("USER")
-                       .anyRequest()
-                       .fullyAuthenticated()
-               ).formLogin(Customizer.withDefaults()).build();*/
     }
     @Bean
     public PasswordEncoder passwordEncoder()
@@ -71,3 +62,4 @@ public class FormBasedAuthenticationInMemoryConfig
         return new BCryptPasswordEncoder();
     }
 }
+*/

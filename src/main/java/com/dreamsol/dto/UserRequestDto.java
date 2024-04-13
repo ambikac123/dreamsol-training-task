@@ -1,6 +1,7 @@
 package com.dreamsol.dto;
 
 
+import com.dreamsol.entities.Role;
 import com.dreamsol.helpers.GlobalHelper;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.Max;
@@ -11,6 +12,8 @@ import jakarta.validation.constraints.Size;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+
+import java.util.List;
 
 @Getter
 @Setter
@@ -31,6 +34,9 @@ public class UserRequestDto
 	@Max(value = 9999999999L, message = GlobalHelper.MOBILE_ERROR_MESSAGE)
 	private long userMobile;
 
+	@Size(min = 8, max = 20, message = "Password must be 8 to 20 characters long")
+	private String userPassword;
+
 	private boolean status;
 
 	@NotNull(message = "usertype must not be null")
@@ -38,5 +44,8 @@ public class UserRequestDto
 
 	@NotNull(message = "department must not be null")
 	private DepartmentRequestDto department;
+
+	@Size(min = 1, message = "User role must be defined")
+	private List<RoleRequestDto> roles;
 
 }
