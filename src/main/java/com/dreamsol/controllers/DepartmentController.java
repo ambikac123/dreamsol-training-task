@@ -82,7 +82,7 @@ public class DepartmentController {
             summary = "Get all department records",
             description = "It is used to find departments on the basis of department name/code containing given keyword"
     )
-    @GetMapping("/search")
+    @GetMapping("/get-all")
     public ResponseEntity<AllDataResponse> getAllDepartments(
             @RequestParam(value = "pageNumber", defaultValue = "0", required = false) @Min(0) Integer pageNumber,
             @RequestParam(value = "pageSize", defaultValue = "10", required = false) @Min(1) Integer pageSize,

@@ -4,6 +4,7 @@ import com.dreamsol.entities.Role;
 import com.dreamsol.entities.User;
 import lombok.Getter;
 import lombok.Setter;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -16,7 +17,7 @@ import java.util.List;
 @Setter
 public class UserDetailsImpl implements UserDetails
 {
-    private User user;
+    @Autowired private User user;
     public UserDetailsImpl(User user)
     {
         this.user = user;
