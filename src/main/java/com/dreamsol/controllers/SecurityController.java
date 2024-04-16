@@ -1,28 +1,21 @@
 package com.dreamsol.controllers;
 
 import com.dreamsol.dto.RoleRequestDto;
-import com.dreamsol.securities.JwtHelper;
 import com.dreamsol.securities.JwtRequest;
 import com.dreamsol.securities.JwtResponse;
+import com.dreamsol.services.RefreshTokenService;
 import com.dreamsol.services.RoleService;
 import com.dreamsol.services.SecurityService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.BadCredentialsException;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -33,6 +26,7 @@ public class SecurityController
 {
     private RoleService roleService;
     private SecurityService securityService;
+    private RefreshTokenService refreshTokenService;
     @Operation(
             summary = "Login API",
             description = "This api helps to generate JWT token and login"
@@ -52,6 +46,15 @@ public class SecurityController
         return securityService.logout();
     }
     @Operation(
+            summary = "Create new token",
+            description = "Create new token using refresh token"
+    )
+    @PostMapping("/create-token")
+    public ResponseEntity<?> createTokenByRefreshToken(@RequestParam String refreshToken)
+    {
+        return refreshTokenService.createTokenByRefreshToken(refreshToken);
+    }
+    @Operation(
             summary = "Create new role",
             description = "This api helps to create new role"
     )
@@ -60,5 +63,6 @@ public class SecurityController
     {
         return roleService.createNewRole(roleRequestDto);
     }
+
 
 }

@@ -1,6 +1,7 @@
 package com.dreamsol.exceptions;
 
 import com.dreamsol.response.ApiResponse;
+import io.jsonwebtoken.ExpiredJwtException;
 import jakarta.validation.ConstraintViolationException;
 import org.springframework.dao.DataAccessException;
 import org.springframework.http.HttpStatus;
@@ -91,7 +92,6 @@ public class GlobalExceptionHandler
 	@ExceptionHandler(RuntimeException.class)
 	public ResponseEntity<ApiResponse> runtimeExceptionHandler(RuntimeException e)
 	{
-		apiResponse = new ApiResponse();
 		apiResponse.setMessage(e.getMessage());
 		apiResponse.setSuccess(false);
 		return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(apiResponse);
@@ -99,7 +99,6 @@ public class GlobalExceptionHandler
 	@ExceptionHandler(FileSystemException.class)
 	public ResponseEntity<ApiResponse> fileSystemExceptionHandler(FileSystemException e)
 	{
-		apiResponse = new ApiResponse();
 		apiResponse.setMessage(e.getMessage());
 		apiResponse.setSuccess(false);
 		return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(apiResponse);
@@ -107,7 +106,13 @@ public class GlobalExceptionHandler
 	@ExceptionHandler(BadCredentialsException.class)
 	public ResponseEntity<ApiResponse> badCredentialsExceptionHandler(BadCredentialsException e)
 	{
-		apiResponse = new ApiResponse();
+		apiResponse.setMessage(e.getMessage());
+		apiResponse.setSuccess(false);
+		return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(apiResponse);
+	}
+	@ExceptionHandler(ExpiredJwtException.class)
+	public ResponseEntity<ApiResponse> expiredJwtExceptionHandler(ExpiredJwtException e)
+	{
 		apiResponse.setMessage(e.getMessage());
 		apiResponse.setSuccess(false);
 		return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(apiResponse);

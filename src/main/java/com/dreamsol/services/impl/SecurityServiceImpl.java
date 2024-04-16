@@ -1,8 +1,10 @@
 package com.dreamsol.services.impl;
 
+import com.dreamsol.entities.RefreshToken;
 import com.dreamsol.securities.JwtHelper;
 import com.dreamsol.securities.JwtRequest;
 import com.dreamsol.securities.JwtResponse;
+import com.dreamsol.services.RefreshTokenService;
 import com.dreamsol.services.SecurityService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -24,14 +26,19 @@ public class SecurityServiceImpl implements SecurityService
     JwtHelper jwtHelper;
     @Autowired
     AuthenticationManager authenticationManager;
+    @Autowired
+    RefreshTokenService refreshTokenService;
     @Override
     public ResponseEntity<JwtResponse> login(JwtRequest request) {
         doAuthenticate(request.getUsername(), request.getPassword());
         UserDetails userDetails = userDetailsService.loadUserByUsername(request.getUsername());
         String token = jwtHelper.generateToken(userDetails);
-        JwtResponse response = new JwtResponse();
-        response.setToken(token);
-        response.setUsername(userDetails.getUsername());
+        RefreshToken refreshToken = refreshTokenService.createRefreshToken(request.getUsername());
+        JwtResponse response =JwtResponse.builder()
+                .username(userDetails.getUsername())
+                .accessToken(token)
+                .refreshToken(refreshToken.getRefreshToken())
+                .build();
         return ResponseEntity.status(HttpStatus.OK).body(response);
     }
     @Override
@@ -48,6 +55,5 @@ public class SecurityServiceImpl implements SecurityService
         {
             throw new BadCredentialsException("Invalid username or password !");
         }
-
     }
 }
