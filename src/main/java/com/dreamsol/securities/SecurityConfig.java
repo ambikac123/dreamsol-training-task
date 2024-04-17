@@ -1,5 +1,10 @@
 package com.dreamsol.securities;
 
+import com.dreamsol.entities.Permission;
+import com.dreamsol.entities.Role;
+import com.dreamsol.helpers.RoleAndPermissionHelper;
+import com.dreamsol.repositories.PermissionRepository;
+import com.dreamsol.repositories.RoleRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -11,12 +16,21 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.util.matcher.RequestMatcher;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 
 @Configuration
 @EnableWebSecurity
@@ -25,28 +39,39 @@ public class SecurityConfig
 {
     @Autowired private JwtAuthenticationEntryPoint point;
     @Autowired private JwtAuthenticationFilter filter;
+    @Autowired RoleRepository roleRepository;
+    @Autowired PermissionRepository permissionRepository;
+    @Autowired RoleAndPermissionHelper roleAndPermissionHelper;
+    private HttpSecurity httpSecurity;
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception
     {
-        http.csrf(AbstractHttpConfigurer::disable)
+        this.httpSecurity = http;
+        httpSecurity.csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth->auth
                         .requestMatchers("/swagger-ui/**",
                                 "/api/login",
-                                "/api/logout",
-                                "/api/create-token").permitAll()
-                        .requestMatchers("/api/users/download-excel-sample",
-                                "/api/users/download-excel-dummy",
-                                "/api/departments/download-excel-sample",
-                                "/api/departments/download-excel-dummy",
-                                "/api/usertypes/download-excel-sample",
-                                "/api/usertypes/download-excel-dummy").hasRole("GUEST")
-                        .requestMatchers("/api/users/**").hasRole("USER")
-                        .requestMatchers("/api/**").hasRole("ADMIN")
+                                "/api/logout").permitAll()
+                        .anyRequest().authenticated()
+                );
+        httpSecurity.exceptionHandling(ex->ex.authenticationEntryPoint(point))
+                .sessionManagement(session->session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
+        httpSecurity.addFilterBefore(filter, UsernamePasswordAuthenticationFilter.class);
+        return httpSecurity.build();
+        /*http.csrf(AbstractHttpConfigurer::disable)
+                .authorizeHttpRequests(auth->auth
+                        .requestMatchers("/swagger-ui/**",
+                                "/api/login",
+                                "/api/logout").permitAll()
+                        .requestMatchers(HttpMethod.GET).hasAnyAuthority("READ_ONLY","ADMIN","USER")
+                        .requestMatchers(HttpMethod.POST).hasAnyAuthority("WRITE_ONLY","ADMIN")
+                        .requestMatchers(HttpMethod.PUT).hasAnyAuthority("READ_WRITE","ADMIN")
+                        .requestMatchers(HttpMethod.DELETE).hasAnyAuthority("DELETE","ADMIN")
                         .anyRequest().authenticated()
                 ).exceptionHandling(ex->ex.authenticationEntryPoint(point))
                 .sessionManagement(session->session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
         http.addFilterBefore(filter,UsernamePasswordAuthenticationFilter.class);
-        return http.build();
+        return http.build();*/
     }
     @Bean
     public PasswordEncoder passwordEncoder() {
@@ -56,5 +81,38 @@ public class SecurityConfig
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
         return config.getAuthenticationManager();
+    }
+    public void updateSecurityConfig()
+    {
+        try {
+            Map<String, String[]> userAuthorities = roleAndPermissionHelper.getAuthorityPatterns();
+
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            if (authentication != null) {
+                Collection<? extends GrantedAuthority> authoritiesList = authentication.getAuthorities();
+                List<String> authorityTypes = new ArrayList<>();
+                List<String> patternsList = new ArrayList<>();
+                for (GrantedAuthority authority : authoritiesList) {
+                    String authorityName = authority.getAuthority();
+                    authorityTypes.add(authorityName);
+                    for(String pattern : userAuthorities.get(authorityName))
+                    {
+                        patternsList.add(pattern);
+                    }
+                }
+                httpSecurity.authorizeHttpRequests(auth -> auth
+                        .requestMatchers(patternsList.toArray(new String[0]))
+                        .hasAnyAuthority(authorityTypes.toArray(authorityTypes.toArray(new String[0])))
+                        .anyRequest()
+                        .fullyAuthenticated()
+                );
+            }
+            httpSecurity.exceptionHandling(ex -> ex.authenticationEntryPoint(point))
+                    .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
+            httpSecurity.addFilterBefore(filter, UsernamePasswordAuthenticationFilter.class);
+        }catch (Exception e)
+        {
+            e.printStackTrace();
+        }
     }
 }

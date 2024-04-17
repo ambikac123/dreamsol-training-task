@@ -1,5 +1,6 @@
 package com.dreamsol.services.impl;
 
+import com.dreamsol.entities.Permission;
 import com.dreamsol.entities.Role;
 import com.dreamsol.entities.User;
 import lombok.Getter;
@@ -11,6 +12,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Iterator;
 import java.util.List;
 
 @Getter
@@ -29,6 +31,11 @@ public class UserDetailsImpl implements UserDetails
         for(Role role : roleList)
         {
             grantedAuthorityList.add(new SimpleGrantedAuthority("ROLE_"+role.getRoleName()));
+        }
+        List<Permission> permissionList = user.getPermissions();
+        for(Permission permission : permissionList)
+        {
+            grantedAuthorityList.add(new SimpleGrantedAuthority("ROLE_"+permission.getPermissionType()));
         }
         return grantedAuthorityList;
     }

@@ -1,8 +1,10 @@
 package com.dreamsol.controllers;
 
+import com.dreamsol.dto.PermissionRequestDto;
 import com.dreamsol.dto.RoleRequestDto;
 import com.dreamsol.securities.JwtRequest;
 import com.dreamsol.securities.JwtResponse;
+import com.dreamsol.services.PermissionService;
 import com.dreamsol.services.RefreshTokenService;
 import com.dreamsol.services.RoleService;
 import com.dreamsol.services.SecurityService;
@@ -27,6 +29,7 @@ public class SecurityController
     private RoleService roleService;
     private SecurityService securityService;
     private RefreshTokenService refreshTokenService;
+    private PermissionService permissionService;
     @Operation(
             summary = "Login API",
             description = "This api helps to generate JWT token and login"
@@ -63,6 +66,14 @@ public class SecurityController
     {
         return roleService.createNewRole(roleRequestDto);
     }
-
+    @Operation(
+            summary = "Create access permissions",
+            description = "This api helps to create custom permissions."
+    )
+    @PostMapping("/permissions/create")
+    public ResponseEntity<?> createPermission(@Valid @RequestBody PermissionRequestDto permissionRequestDto)
+    {
+        return permissionService.createPermission(permissionRequestDto);
+    }
 
 }
