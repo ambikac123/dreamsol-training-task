@@ -14,6 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -35,6 +36,7 @@ import java.util.List;
 @RequestMapping("/api/departments")
 @Tag(name = "Department", description = "This is department API")
 @Validated
+@PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_DEMO')")
 public class DepartmentController {
     @Autowired
     private DepartmentService departmentService;

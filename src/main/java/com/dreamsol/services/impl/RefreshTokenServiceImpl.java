@@ -35,13 +35,13 @@ public class RefreshTokenServiceImpl implements RefreshTokenService
                 return refreshToken;
             if(isAlreadyUser(refreshToken))
             {
-                refreshToken.setRefreshToken(UUID.randomUUID().toString());
+                refreshToken.setRefreshToken(UUID.randomUUID()+"."+UUID.randomUUID()+"."+UUID.randomUUID());
                 refreshToken.setExpiry(System.currentTimeMillis()+REFRESH_TOKEN_VALIDITY);
                 refreshTokenRepository.save(refreshToken);
                 return refreshToken;
             }
             refreshToken = RefreshToken.builder()
-                    .refreshToken(UUID.randomUUID().toString())
+                    .refreshToken(UUID.randomUUID()+"."+UUID.randomUUID()+"."+UUID.randomUUID())
                     .expiry(System.currentTimeMillis()+REFRESH_TOKEN_VALIDITY)
                     .user(user)
                     .build();

@@ -1,6 +1,8 @@
 package com.dreamsol.services;
 
 import com.dreamsol.dto.PermissionRequestDto;
+import com.dreamsol.dto.PermissionResponseDto;
+import com.dreamsol.entities.Permission;
 import org.springframework.http.ResponseEntity;
 
 public interface PermissionService
@@ -11,4 +13,8 @@ public interface PermissionService
     ResponseEntity<?> updatePermission(PermissionRequestDto permissionRequestDto, Long permissionId);
     ResponseEntity<?> getPermission(Long permissionId);
     ResponseEntity<?> getAllPermission();
+
+    Permission permissionRequestDtoToPermission(PermissionRequestDto permissionRequestDto);
+
+    PermissionResponseDto permissionToPermissionResponseDto(Permission permission);
 }

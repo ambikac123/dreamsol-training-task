@@ -12,7 +12,7 @@ import java.util.stream.Collectors;
 
 import com.dreamsol.dto.DepartmentSingleDataResponseDto;
 import com.dreamsol.dto.DocumentSingleDataResponseDto;
-import com.dreamsol.dto.PermissionRequestDto;
+import com.dreamsol.dto.PermissionResponseDto;
 import com.dreamsol.dto.RoleRequestDto;
 import com.dreamsol.dto.RoleResponseDto;
 import com.dreamsol.dto.UserRequestDto;
@@ -42,6 +42,7 @@ import com.dreamsol.response.ExcelUploadResponse;
 import com.dreamsol.response.UserExcelUploadResponse;
 import com.dreamsol.services.DepartmentService;
 import com.dreamsol.services.DocumentService;
+import com.dreamsol.services.PermissionService;
 import com.dreamsol.services.UserService;
 import com.dreamsol.services.UserTypeService;
 import lombok.AllArgsConstructor;
@@ -61,6 +62,9 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -85,6 +89,7 @@ public class UserServiceImpl implements UserService
     private DocumentService documentService;
     private DepartmentService departmentService;
     private UserTypeService userTypeService;
+    private PermissionService permissionService;
     private ImageHelper imageHelper;
     private GlobalHelper globalHelper;
     private ExcelHelper excelHelper;
@@ -117,7 +122,7 @@ public class UserServiceImpl implements UserService
                 user.setRoles(roleList);
                 List<Permission> permissionList = userRequestDto.getPermissions()
                         .stream()
-                        .map((permissionRequestDto)->permissionRequestDtoToPermission(permissionRequestDto))
+                        .map((permissionRequestDto)->permissionService.permissionRequestDtoToPermission(permissionRequestDto))
                         .toList();
                 user.setPermissions(permissionList);
                 try{
@@ -168,6 +173,11 @@ public class UserServiceImpl implements UserService
                         .map((roleRequestDto)->roleRequestDtoToRole(roleRequestDto))
                         .toList();
                 user.setRoles(roleList);
+                List<Permission> permissionList = userRequestDto.getPermissions()
+                        .stream()
+                        .map((permissionRequestDto)->permissionService.permissionRequestDtoToPermission(permissionRequestDto))
+                        .toList();
+                user.setPermissions(permissionList);
                 try {
                     userRepository.save(user);
                     return ResponseEntity.status(HttpStatus.OK).body(new ApiResponse("user with id " + userId + " updated successfully!", true));
@@ -204,6 +214,12 @@ public class UserServiceImpl implements UserService
 	}
     public ResponseEntity<?> getSingleUser(Long userId)
     {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        UserDetails userDetails =(UserDetails) authentication.getPrincipal();
+        if(userRepository.findByUserEmail(userDetails.getUsername()).getUserId() != userId)
+        {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ApiResponse("Can't be accessed!",false));
+        }
         User user = getUser(userId);
         if(Objects.isNull(user))
             throw new ResourceNotFoundException("user","userId",userId);
@@ -449,6 +465,12 @@ public class UserServiceImpl implements UserService
                         .stream().map((role)->roleToRoleResponseDto(role)).toList();
                 userSingleDataResponseDto.setRoles(roleResponseDtoList);
             }
+            if(!user.getPermissions().isEmpty())
+            {
+                List<PermissionResponseDto> permissionResponseDtoList = user.getPermissions()
+                        .stream().map((permission)->permissionService.permissionToPermissionResponseDto(permission)).toList();
+                userSingleDataResponseDto.setPermissions(permissionResponseDtoList);
+            }
             if(!Objects.isNull(user.getUserType()))
             {
                 UserTypeSingleDataResponseDto userTypeSingleDataResponseDto = new UserTypeSingleDataResponseDto();
@@ -476,6 +498,7 @@ public class UserServiceImpl implements UserService
             throw new RuntimeException(e.getMessage());
         }
     }
+
     public User userExcelUploadResponseToUser(UserExcelUploadResponse userExcelUploadResponse)
     {
         User user = new User();
@@ -516,10 +539,10 @@ public class UserServiceImpl implements UserService
     public Role roleRequestDtoToRole(RoleRequestDto roleRequestDto)
     {
         try {
-            Role role = roleRepository.findByRoleName(roleRequestDto.getRoleName());
+            Role role = roleRepository.findByRoleType(roleRequestDto.getRoleType());
             if (!Objects.isNull(role) && role.isStatus())
                 return role;
-            throw new ResourceNotFoundException("User Role", "roleName:" + roleRequestDto.getRoleName(), 0);
+            throw new ResourceNotFoundException("User Role", "roleName:" + roleRequestDto.getRoleType(), 0);
         }catch(Exception e)
         {
             throw new RuntimeException("Error occurred while varifying user roles, Reason: "+e.getMessage());
@@ -531,16 +554,5 @@ public class UserServiceImpl implements UserService
         BeanUtils.copyProperties(role,roleResponseDto);
         return roleResponseDto;
     }
-    public Permission permissionRequestDtoToPermission(PermissionRequestDto permissionRequestDto)
-    {
-        try {
-            Permission permission = permissionRepository.findByPermissionType(permissionRequestDto.getPermissionType());
-            if (!Objects.isNull(permission))
-                return permission;
-            throw new ResourceNotFoundException("Permission", "permissionName:" + permissionRequestDto.getPermissionType(), 0);
-        }catch(Exception e)
-        {
-            throw new RuntimeException("Error occurred while varifying permission, Reason: "+e.getMessage());
-        }
-    }
+
 }

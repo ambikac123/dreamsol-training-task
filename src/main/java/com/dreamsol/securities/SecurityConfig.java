@@ -6,6 +6,7 @@ import com.dreamsol.repositories.RoleRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
@@ -22,6 +23,7 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -79,24 +81,25 @@ public class SecurityConfig
     {
         try {
             Map<String, String[]> userAuthorities = roleAndPermissionHelper.getAuthorityPatterns();
-
             Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
             if (authentication != null) {
                 Collection<? extends GrantedAuthority> authoritiesList = authentication.getAuthorities();
                 List<String> authorityTypes = new ArrayList<>();
                 List<String> patternsList = new ArrayList<>();
-                for (GrantedAuthority authority : authoritiesList) {
+                for (GrantedAuthority authority : authoritiesList)
+                {
                     String authorityName = authority.getAuthority();
                     authorityTypes.add(authorityName);
-                    for(String pattern : userAuthorities.get(authorityName))
-                    {
-                        patternsList.add(pattern);
-                    }
+                    patternsList.addAll(Arrays.asList(userAuthorities.get(authorityName))); // here may be an exception
                 }
                 String[] array1 = patternsList.toArray(new String[]{});
                 String[] array2 = authorityTypes.toArray(new String[]{});
                 httpSecurity.authorizeHttpRequests(auth -> auth
                         .requestMatchers(array1).hasAnyAuthority(array2)
+                        /*.requestMatchers(HttpMethod.GET).hasAnyAuthority("READ","WRITE")
+                        .requestMatchers(HttpMethod.POST).hasAnyAuthority("WRITE","UPDATE")
+                        .requestMatchers(HttpMethod.PUT).hasAuthority("WRITE")
+                        .requestMatchers(HttpMethod.DELETE).hasAuthority("DELETE")*/
                 );
             }
             httpSecurity.exceptionHandling(ex -> ex.authenticationEntryPoint(point))
@@ -104,7 +107,7 @@ public class SecurityConfig
             httpSecurity.addFilterBefore(filter, UsernamePasswordAuthenticationFilter.class);
         }catch (Exception e)
         {
-            throw new RuntimeException("Error occurred while granting permissions, Reason: "+e.getMessage());
+            throw new RuntimeException("Error occurred while applying permissions, Reason: "+e.getMessage());
         }
     }
 }

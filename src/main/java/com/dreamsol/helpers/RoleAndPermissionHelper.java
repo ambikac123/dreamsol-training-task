@@ -1,45 +1,39 @@
 package com.dreamsol.helpers;
 
+import com.dreamsol.entities.Permission;
+import com.dreamsol.entities.Role;
+import com.dreamsol.repositories.PermissionRepository;
+import com.dreamsol.repositories.RoleRepository;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+
+import java.util.List;
 import java.util.Map;
 
 @Component
 public class RoleAndPermissionHelper
 {
+    @Autowired private PermissionRepository permissionRepository;
+    @Autowired private RoleRepository roleRepository;
     private final Map<String,String[]> authorityPatterns;
     public RoleAndPermissionHelper(Map<String,String[]> authorityPatterns)
     {
         this.authorityPatterns = authorityPatterns;
     }
-    public Map<String,String[]> getAuthorityPatterns()
+   public Map<String,String[]> getAuthorityPatterns()
     {
-        String[] adminPattern = {"/api/**"};
-        authorityPatterns.put("ROLE_ADMIN",adminPattern);
-
-        String[] userPattern = {"/api/users/get/*",
-                "/api/users/get-all",
-                "/api/users/update/*",
-                "/api/users/delete/*",
-                "/api/users/download-*",
-                "/api/users/upload-file",
-                "/api/users/download-file/*"
-            };
-        authorityPatterns.put("ROLE_USER",userPattern);
-
-        String[] guestPattern = {"**/download-excel-*"};
-        authorityPatterns.put("ROLE_GUEST",guestPattern);
-
-        String[] readOnlyPattern = {"/api/**/get/",
-                "/api/**/get-all",
-                "/api/**/download-excel-*"
-            };
-        authorityPatterns.put("ROLE_READ_ONLY",readOnlyPattern);
-
-        String[] writeOnlyPattern = {"/api/**/create","/api/**/update"};
-        authorityPatterns.put("ROLE_WRITE_ONLY",writeOnlyPattern);
-
-        String[] deletePattern = {"/api/**/delete/*"};
-        authorityPatterns.put("ROLE_DELETE",deletePattern);
+        authorityPatterns.put("ROLE_ALL",new String[]{"/api/**"});
+        authorityPatterns.put("ROLE_DEMO",new String[]{"/api/**"});
+        List<Role> roles = roleRepository.findAllByStatusTrue();
+        List<Permission> permissions = permissionRepository.findAllByStatusTrue();
+        for(Role role : roles)
+        {
+            authorityPatterns.put("ROLE_"+role.getRoleType(),role.getEndPoints().toArray(new String[0]));
+        }
+        for (Permission permission : permissions)
+        {
+            authorityPatterns.put("ROLE_"+permission.getPermissionType(),permission.getEndPoints().toArray(new String[0]));
+        }
         return authorityPatterns;
     }
 }

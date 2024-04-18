@@ -26,15 +26,15 @@ public class RoleServiceImpl implements RoleService
     @Override
     public ResponseEntity<?> createNewRole(RoleRequestDto roleRequestDto) {
         try {
-            Role role = roleRepository.findByRoleName(roleRequestDto.getRoleName());
+            Role role = roleRepository.findByRoleType(roleRequestDto.getRoleType());
             if (Objects.isNull(role)) {
                 role = new Role();
                 BeanUtils.copyProperties(roleRequestDto, role);
                 role.setTimeStamp(LocalDateTime.now());
                 roleRepository.save(role);
-                return ResponseEntity.status(HttpStatus.OK).body(new ApiResponse("New Role '" + roleRequestDto.getRoleName() + "' created successfully!", true));
+                return ResponseEntity.status(HttpStatus.OK).body(new ApiResponse("New Role '" + roleRequestDto.getRoleType() + "' created successfully!", true));
             } else {
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ApiResponse(roleRequestDto.getRoleName() + " Role already exist!", false));
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ApiResponse(roleRequestDto.getRoleType() + " Role already exist!", false));
             }
         }catch (Exception e)
         {
@@ -45,11 +45,11 @@ public class RoleServiceImpl implements RoleService
     @Override
     public ResponseEntity<?> deleteRole(String roleName) {
         try{
-            Role role = roleRepository.findByRoleName(roleName);
+            Role role = roleRepository.findByRoleType(roleName);
             if(!Objects.isNull(role))
             {
                 role.setStatus(false);
-                return ResponseEntity.status(HttpStatus.OK).body(new ApiResponse("Role "+role.getRoleName()+" deleted successfully",true));
+                return ResponseEntity.status(HttpStatus.OK).body(new ApiResponse("Role "+role.getRoleType()+" deleted successfully",true));
             }
         }catch (Exception e)
         {

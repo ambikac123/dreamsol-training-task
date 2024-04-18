@@ -16,10 +16,11 @@ public class UserSingleDataResponseDto
 	private String userEmail;
 	private long userMobile;
 	private String imageName;
-	private List<RoleResponseDto> roles;
-	private LocalDateTime timeStamp;
-	private boolean status;
+	private List<DocumentSingleDataResponseDto> attachments;
 	private UserTypeSingleDataResponseDto userType;
 	private DepartmentSingleDataResponseDto department;
-	private List<DocumentSingleDataResponseDto> attachments;
+	private List<RoleResponseDto> roles;
+	private List<PermissionResponseDto> permissions;
+	private boolean status;
+	private LocalDateTime timeStamp;
 }

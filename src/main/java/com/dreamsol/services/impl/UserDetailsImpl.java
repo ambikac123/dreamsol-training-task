@@ -30,7 +30,7 @@ public class UserDetailsImpl implements UserDetails
         List<GrantedAuthority> grantedAuthorityList = new ArrayList<>();
         for(Role role : roleList)
         {
-            grantedAuthorityList.add(new SimpleGrantedAuthority("ROLE_"+role.getRoleName()));
+            grantedAuthorityList.add(new SimpleGrantedAuthority("ROLE_"+role.getRoleType()));
         }
         List<Permission> permissionList = user.getPermissions();
         for(Permission permission : permissionList)

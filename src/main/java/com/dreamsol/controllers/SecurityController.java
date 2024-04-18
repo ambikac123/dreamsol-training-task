@@ -14,7 +14,11 @@ import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -66,6 +70,7 @@ public class SecurityController
     {
         return roleService.createNewRole(roleRequestDto);
     }
+    /* ----------------------------------- Permission Controllers ----------------------------------- */
     @Operation(
             summary = "Create access permissions",
             description = "This api helps to create custom permissions."
@@ -75,5 +80,40 @@ public class SecurityController
     {
         return permissionService.createPermission(permissionRequestDto);
     }
-
+    @Operation(
+            summary = "Update permission",
+            description = "This api helps to modify permissions basis of permissionId"
+    )
+    @PutMapping("/permissions/update/{permissionId}")
+    public ResponseEntity<?> updatePermission(@Valid @RequestBody PermissionRequestDto permissionRequestDto,@PathVariable Long permissionId)
+    {
+        return permissionService.updatePermission(permissionRequestDto,permissionId);
+    }
+    @Operation(
+            summary = "Delete permission",
+            description = "This api helps to delete permissions"
+    )
+    @DeleteMapping("/permissions/delete/{permissionId}")
+    public ResponseEntity<?> deletePermission(@PathVariable Long permissionId)
+    {
+        return permissionService.deletePermission(permissionId);
+    }
+    @Operation(
+            summary = "Get single permission",
+            description = "This api helps to get all permissions"
+    )
+    @GetMapping("/permissions/get/{permissionId}")
+    public ResponseEntity<?> getSinglePermission(@PathVariable Long permissionId)
+    {
+        return permissionService.getPermission(permissionId);
+    }
+    @Operation(
+            summary = "Get all permission",
+            description = "This api helps to get all permissions"
+    )
+    @GetMapping("/permissions/get-all")
+    public ResponseEntity<?> getAllPermission()
+    {
+        return permissionService.getAllPermission();
+    }
 }

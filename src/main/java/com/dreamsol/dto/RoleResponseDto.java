@@ -4,12 +4,14 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Getter
 @Setter
 public class RoleResponseDto
 {
-    private String roleName;
+    private String roleType;
+    private List<String> endPoints;
     private boolean status;
     private LocalDateTime timeStamp;
 }
