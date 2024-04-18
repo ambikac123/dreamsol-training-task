@@ -1,14 +1,11 @@
 package com.dreamsol.securities;
 
-import com.dreamsol.entities.Permission;
-import com.dreamsol.entities.Role;
 import com.dreamsol.helpers.RoleAndPermissionHelper;
 import com.dreamsol.repositories.PermissionRepository;
 import com.dreamsol.repositories.RoleRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
@@ -19,15 +16,12 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-import org.springframework.security.web.util.matcher.RequestMatcher;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -52,7 +46,6 @@ public class SecurityConfig
                         .requestMatchers("/swagger-ui/**",
                                 "/api/login",
                                 "/api/logout").permitAll()
-                        .anyRequest().authenticated()
                 );
         httpSecurity.exceptionHandling(ex->ex.authenticationEntryPoint(point))
                 .sessionManagement(session->session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
@@ -100,11 +93,10 @@ public class SecurityConfig
                         patternsList.add(pattern);
                     }
                 }
+                String[] array1 = patternsList.toArray(new String[]{});
+                String[] array2 = authorityTypes.toArray(new String[]{});
                 httpSecurity.authorizeHttpRequests(auth -> auth
-                        .requestMatchers(patternsList.toArray(new String[0]))
-                        .hasAnyAuthority(authorityTypes.toArray(authorityTypes.toArray(new String[0])))
-                        .anyRequest()
-                        .fullyAuthenticated()
+                        .requestMatchers(array1).hasAnyAuthority(array2)
                 );
             }
             httpSecurity.exceptionHandling(ex -> ex.authenticationEntryPoint(point))
@@ -112,7 +104,7 @@ public class SecurityConfig
             httpSecurity.addFilterBefore(filter, UsernamePasswordAuthenticationFilter.class);
         }catch (Exception e)
         {
-            e.printStackTrace();
+            throw new RuntimeException("Error occurred while granting permissions, Reason: "+e.getMessage());
         }
     }
 }

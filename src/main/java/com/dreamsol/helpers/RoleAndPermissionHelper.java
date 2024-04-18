@@ -13,15 +13,33 @@ public class RoleAndPermissionHelper
     }
     public Map<String,String[]> getAuthorityPatterns()
     {
-        String[] adminPattern = new String[2];
-        adminPattern[0] = "/api/departments/**";
-        adminPattern[1] = "/api/usertypes/**";
+        String[] adminPattern = {"/api/**"};
         authorityPatterns.put("ROLE_ADMIN",adminPattern);
 
-        String[] userPattern = new String[2];
-        userPattern[0] = "/api/users/create";
-        userPattern[1] = "/api/users/get-all";
+        String[] userPattern = {"/api/users/get/*",
+                "/api/users/get-all",
+                "/api/users/update/*",
+                "/api/users/delete/*",
+                "/api/users/download-*",
+                "/api/users/upload-file",
+                "/api/users/download-file/*"
+            };
         authorityPatterns.put("ROLE_USER",userPattern);
+
+        String[] guestPattern = {"**/download-excel-*"};
+        authorityPatterns.put("ROLE_GUEST",guestPattern);
+
+        String[] readOnlyPattern = {"/api/**/get/",
+                "/api/**/get-all",
+                "/api/**/download-excel-*"
+            };
+        authorityPatterns.put("ROLE_READ_ONLY",readOnlyPattern);
+
+        String[] writeOnlyPattern = {"/api/**/create","/api/**/update"};
+        authorityPatterns.put("ROLE_WRITE_ONLY",writeOnlyPattern);
+
+        String[] deletePattern = {"/api/**/delete/*"};
+        authorityPatterns.put("ROLE_DELETE",deletePattern);
         return authorityPatterns;
     }
 }
