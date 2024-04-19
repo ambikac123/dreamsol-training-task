@@ -6,7 +6,6 @@ import com.dreamsol.repositories.RoleRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
@@ -21,6 +20,8 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.authentication.logout.LogoutHandler;
+import org.springframework.security.web.authentication.logout.LogoutSuccessHandler;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -47,26 +48,13 @@ public class SecurityConfig
                 .authorizeHttpRequests(auth->auth
                         .requestMatchers("/swagger-ui/**",
                                 "/api/login",
-                                "/api/logout").permitAll()
+                                "/api/logout",
+                                "/api/re-generate-token").permitAll()
                 );
         httpSecurity.exceptionHandling(ex->ex.authenticationEntryPoint(point))
                 .sessionManagement(session->session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
         httpSecurity.addFilterBefore(filter, UsernamePasswordAuthenticationFilter.class);
         return httpSecurity.build();
-        /*http.csrf(AbstractHttpConfigurer::disable)
-                .authorizeHttpRequests(auth->auth
-                        .requestMatchers("/swagger-ui/**",
-                                "/api/login",
-                                "/api/logout").permitAll()
-                        .requestMatchers(HttpMethod.GET).hasAnyAuthority("READ_ONLY","ADMIN","USER")
-                        .requestMatchers(HttpMethod.POST).hasAnyAuthority("WRITE_ONLY","ADMIN")
-                        .requestMatchers(HttpMethod.PUT).hasAnyAuthority("READ_WRITE","ADMIN")
-                        .requestMatchers(HttpMethod.DELETE).hasAnyAuthority("DELETE","ADMIN")
-                        .anyRequest().authenticated()
-                ).exceptionHandling(ex->ex.authenticationEntryPoint(point))
-                .sessionManagement(session->session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
-        http.addFilterBefore(filter,UsernamePasswordAuthenticationFilter.class);
-        return http.build();*/
     }
     @Bean
     public PasswordEncoder passwordEncoder() {
@@ -96,18 +84,24 @@ public class SecurityConfig
                 String[] array2 = authorityTypes.toArray(new String[]{});
                 httpSecurity.authorizeHttpRequests(auth -> auth
                         .requestMatchers(array1).hasAnyAuthority(array2)
-                        /*.requestMatchers(HttpMethod.GET).hasAnyAuthority("READ","WRITE")
-                        .requestMatchers(HttpMethod.POST).hasAnyAuthority("WRITE","UPDATE")
-                        .requestMatchers(HttpMethod.PUT).hasAuthority("WRITE")
-                        .requestMatchers(HttpMethod.DELETE).hasAuthority("DELETE")*/
                 );
             }
-            httpSecurity.exceptionHandling(ex -> ex.authenticationEntryPoint(point))
-                    .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
-            httpSecurity.addFilterBefore(filter, UsernamePasswordAuthenticationFilter.class);
         }catch (Exception e)
         {
             throw new RuntimeException("Error occurred while applying permissions, Reason: "+e.getMessage());
         }
+    }
+    @Bean
+    public LogoutHandler customLogoutHandler()
+    {
+        return (request, response, authentication) -> {
+            authentication.setAuthenticated(false);
+            request.getSession().invalidate();
+        };
+    }
+    @Bean
+    public LogoutSuccessHandler customLogoutSuccessHandler()
+    {
+        return (request, response, authentication) -> response.sendRedirect("/api/login");
     }
 }

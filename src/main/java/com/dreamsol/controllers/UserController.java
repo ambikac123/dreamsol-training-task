@@ -146,7 +146,7 @@ public class UserController
 			summary = "Upload any type attachment",
 			description = "This api helps to upload and save user's attachment"
 	)
-	@PostMapping(value = "/upload-file/{userId}" , consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+	@PostMapping(value = "/upload-attachment/{userId}" , consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
 	public ResponseEntity<?> uploadFile(@PathVariable("userId") Long userId, @RequestParam("anyFile") MultipartFile anyFile)
 	{
 		return userService.uploadUserDocument(anyFile,filePath,userId);
@@ -155,7 +155,7 @@ public class UserController
 			summary = "Download existing attachment",
 			description = "This api helps to download user's existing attachment."
 	)
-	@GetMapping(value = "/download-file/{fileName}", produces = MediaType.ALL_VALUE)
+	@GetMapping(value = "/download-attachment/{fileName}", produces = MediaType.ALL_VALUE)
 	public ResponseEntity<Resource> downloadFile(@PathVariable("fileName") String fileName)
 	{
 		return userService.downloadUserDocument(fileName,filePath);

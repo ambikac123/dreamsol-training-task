@@ -3,6 +3,7 @@ package com.dreamsol.services.impl;
 import com.dreamsol.dto.RoleRequestDto;
 import com.dreamsol.dto.RoleResponseDto;
 import com.dreamsol.entities.Role;
+import com.dreamsol.exceptions.ResourceNotFoundException;
 import com.dreamsol.repositories.RoleRepository;
 import com.dreamsol.response.ApiResponse;
 import com.dreamsol.services.RoleService;
@@ -43,9 +44,14 @@ public class RoleServiceImpl implements RoleService
     }
 
     @Override
-    public ResponseEntity<?> deleteRole(String roleName) {
+    public ResponseEntity<?> updateRole(RoleRequestDto roleRequestDto, Long roleId) {
+        return null;
+    }
+
+    @Override
+    public ResponseEntity<?> deleteRole(Long roleId) {
         try{
-            Role role = roleRepository.findByRoleType(roleName);
+            Role role = roleRepository.findById(roleId).orElseThrow(()-> new ResourceNotFoundException("Role","roleId",roleId));
             if(!Objects.isNull(role))
             {
                 role.setStatus(false);
@@ -55,6 +61,11 @@ public class RoleServiceImpl implements RoleService
         {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ApiResponse("Internal Server Error, Reason: " + e.getMessage(), false));
         }
+        return null;
+    }
+
+    @Override
+    public ResponseEntity<?> getRole(Long roleId) {
         return null;
     }
 

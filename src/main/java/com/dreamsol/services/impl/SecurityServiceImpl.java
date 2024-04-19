@@ -1,6 +1,7 @@
 package com.dreamsol.services.impl;
 
 import com.dreamsol.entities.RefreshToken;
+import com.dreamsol.response.ApiResponse;
 import com.dreamsol.securities.JwtHelper;
 import com.dreamsol.securities.JwtRequest;
 import com.dreamsol.securities.JwtResponse;
@@ -13,6 +14,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -35,7 +37,6 @@ public class SecurityServiceImpl implements SecurityService
             String token = jwtHelper.generateToken(userDetails);
             RefreshToken refreshToken = refreshTokenService.createRefreshToken(request.getUsername());
             JwtResponse response = JwtResponse.builder()
-                    .username(userDetails.getUsername())
                     .accessToken(token)
                     .refreshToken(refreshToken.getRefreshToken())
                     .build();
@@ -46,8 +47,9 @@ public class SecurityServiceImpl implements SecurityService
             return ResponseEntity.status(HttpStatus.OK).body(response);
     }
     @Override
-    public ResponseEntity<JwtResponse> logout() {
-        return null;
+    public ResponseEntity<?> logout() {
+
+        return ResponseEntity.status(HttpStatus.OK).body(new ApiResponse("Logged out successfully!",true));
     }
 
     private void doAuthenticate(String username, String password)

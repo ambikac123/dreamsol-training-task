@@ -10,5 +10,5 @@ import org.springframework.web.bind.annotation.RequestBody;
 public interface SecurityService
 {
     ResponseEntity<JwtResponse> login(JwtRequest request);
-    ResponseEntity<JwtResponse> logout();
+    ResponseEntity<?> logout();
 }

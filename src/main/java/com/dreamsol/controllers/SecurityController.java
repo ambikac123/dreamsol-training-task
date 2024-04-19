@@ -13,6 +13,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -26,14 +27,13 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api")
-@AllArgsConstructor(onConstructor_ = {@Autowired})
-@Tag(name = "Role", description = "This is role API")
+@Tag(name = "Common API", description = "This api has access to login, logout, role and permission")
 public class SecurityController
 {
-    private RoleService roleService;
-    private SecurityService securityService;
-    private RefreshTokenService refreshTokenService;
-    private PermissionService permissionService;
+    @Autowired private RoleService roleService;
+    @Autowired private SecurityService securityService;
+    @Autowired private RefreshTokenService refreshTokenService;
+    @Autowired private PermissionService permissionService;
     @Operation(
             summary = "Login API",
             description = "This api helps to generate JWT token and login"
@@ -48,7 +48,7 @@ public class SecurityController
             description = "This api helps to logout"
     )
     @PostMapping("/logout")
-    public ResponseEntity<JwtResponse> logout()
+    public ResponseEntity<?> logout()
     {
         return securityService.logout();
     }
@@ -56,11 +56,13 @@ public class SecurityController
             summary = "Create new token",
             description = "Create new token using refresh token"
     )
-    @PostMapping("/create-token")
-    public ResponseEntity<?> createTokenByRefreshToken(@RequestParam String refreshToken)
+    @PostMapping("/re-generate-token")
+    public ResponseEntity<?> reGenerateToken(@RequestParam String refreshToken)
     {
         return refreshTokenService.createTokenByRefreshToken(refreshToken);
     }
+
+    /* ---------------------------------- Role Controllers ------------------------------------------- */
     @Operation(
             summary = "Create new role",
             description = "This api helps to create new role"
@@ -70,6 +72,43 @@ public class SecurityController
     {
         return roleService.createNewRole(roleRequestDto);
     }
+    @Operation(
+            summary = "Update role",
+            description = "This api helps to update roles"
+    )
+    @PostMapping("/roles/update/{roleId}")
+    public ResponseEntity<?> updateRole(@Valid @RequestBody RoleRequestDto roleRequestDto,@PathVariable Long roleId)
+    {
+        return roleService.updateRole(roleRequestDto,roleId);
+    }
+    @Operation(
+            summary = "Delete role",
+            description = "This api helps to delete roles"
+    )
+    @PostMapping("/roles/delete/{roleId}")
+    public ResponseEntity<?> deleteRole(@PathVariable Long roleId)
+    {
+        return roleService.deleteRole(roleId);
+    }
+    @Operation(
+            summary = "Get role",
+            description = "This api helps to get role"
+    )
+    @PostMapping("/roles/get/{roleId}")
+    public ResponseEntity<?> getRole(@PathVariable Long roleId)
+    {
+        return roleService.getRole(roleId);
+    }
+    @Operation(
+            summary = "Get all roles",
+            description = "This api helps to get all role"
+    )
+    @PostMapping("/roles/get-all")
+    public ResponseEntity<?> getAllRoles()
+    {
+        return roleService.getAllRoles();
+    }
+
     /* ----------------------------------- Permission Controllers ----------------------------------- */
     @Operation(
             summary = "Create access permissions",
@@ -103,7 +142,7 @@ public class SecurityController
             description = "This api helps to get all permissions"
     )
     @GetMapping("/permissions/get/{permissionId}")
-    public ResponseEntity<?> getSinglePermission(@PathVariable Long permissionId)
+    public ResponseEntity<?> getPermission(@PathVariable Long permissionId)
     {
         return permissionService.getPermission(permissionId);
     }

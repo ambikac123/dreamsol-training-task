@@ -1,37 +1,50 @@
 package com.dreamsol.securities;
 
+import com.dreamsol.entities.Permission;
+import com.dreamsol.entities.Role;
+import com.dreamsol.entities.User;
+import com.dreamsol.exceptions.InvalidTokenException;
+import com.dreamsol.services.impl.UserDetailsImpl;
 import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 
+import javax.crypto.spec.SecretKeySpec;
 import java.security.Key;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 
 @Component
 public class JwtHelper
 {
-    public static final long JWT_TOKEN_VALIDITY = 6*60*60*1000;    // equivalent to 6 hour
+    @Value("${jwt.validity.access-token}")
+    private long JWT_TOKEN_VALIDITY;
     private static final String SECRET_KEY = "fhsdgfhgdhfggfsgdfghdgfhdsgfhgsdhfgshdgfsgfshfhskjjgkhlkhhskhhjdnvjdjghdghdjbdhadhjhhgeueyueyuienvxnvbjfbfh";
-
+    private static final Key key = new SecretKeySpec(SECRET_KEY.getBytes(), SignatureAlgorithm.HS512.getJcaName());
     public String getUsernameFromToken(String token) {
         return getClaimFromToken(token, Claims::getSubject);
     }
-
     public Date getExpirationDateFromToken(String token) {
         return getClaimFromToken(token, Claims::getExpiration);
     }
-
     public <T> T getClaimFromToken(String token, Function<Claims, T> claimsResolver) {
         final Claims claims = getAllClaimsFromToken(token);
         return claimsResolver.apply(claims);
     }
     private Claims getAllClaimsFromToken(String token) {
-            return Jwts.parser().setSigningKey(SECRET_KEY).parseClaimsJws(token).getBody();
+            return Jwts.parserBuilder()
+                    .setSigningKey(key)
+                    .build()
+                    .parseClaimsJws(token)
+                    .getBody();
     }
     private Boolean isTokenExpired(String token) {
         final Date expiration = getExpirationDateFromToken(token);
@@ -39,16 +52,23 @@ public class JwtHelper
     }
     public String generateToken(UserDetails userDetails) {
         Map<String, Object> claims = new HashMap<>();
-        String username = userDetails.getUsername();
-        return doGenerateToken(claims, username);
+        User user = ((UserDetailsImpl)userDetails).getUser();
+        claims.put("Id",user.getUserId());
+        claims.put("Name",user.getUserName());
+        claims.put("Email",user.getUserEmail());
+        claims.put("Mobile No.",user.getUserMobile());
+        claims.put("Roles", List.of(user.getRoles().stream().map(Role::getRoleType).toArray()));
+        claims.put("Permissions",List.of(user.getPermissions().stream().map(Permission::getPermissionType).toArray()));
+        String subject = userDetails.getUsername();
+        return doGenerateToken(claims, subject);
     }
     private String doGenerateToken(Map<String, Object> claims, String subject) {
         return Jwts.builder()
                 .setClaims(claims)
                 .setSubject(subject)
                 .setIssuedAt(new Date(System.currentTimeMillis()))
-                .setExpiration(new Date(System.currentTimeMillis() + JWT_TOKEN_VALIDITY))
-                .signWith(SignatureAlgorithm.HS512, SECRET_KEY)
+                .setExpiration(new Date(System.currentTimeMillis()+JWT_TOKEN_VALIDITY))
+                .signWith(key,SignatureAlgorithm.HS512)
                 .compact();
     }
     public Boolean validateToken(String token, UserDetails userDetails) {

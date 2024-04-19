@@ -9,6 +9,7 @@ import com.dreamsol.securities.JwtHelper;
 import com.dreamsol.securities.JwtResponse;
 import com.dreamsol.services.RefreshTokenService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -19,11 +20,12 @@ import java.util.UUID;
 @Service
 public class RefreshTokenServiceImpl implements RefreshTokenService
 {
-    public static final long REFRESH_TOKEN_VALIDITY = 24*60*60*1000;
     @Autowired
     private RefreshTokenRepository refreshTokenRepository;
     @Autowired private UserRepository userRepository;
     @Autowired private JwtHelper jwtHelper;
+    @Value("${jwt.validity.refresh-token}")
+    private long REFRESH_TOKEN_VALIDITY;
     @Override
     public RefreshToken createRefreshToken(String username)
     {
@@ -61,7 +63,6 @@ public class RefreshTokenServiceImpl implements RefreshTokenService
             JwtResponse jwtResponse = JwtResponse.builder()
                     .refreshToken(refreshToken)
                     .accessToken(newToken)
-                    .username(user.getUserEmail())
                     .build();
             return ResponseEntity.status(HttpStatus.OK).body(jwtResponse);
         }

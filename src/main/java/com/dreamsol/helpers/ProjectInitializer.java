@@ -1,5 +1,6 @@
 package com.dreamsol.helpers;
 
+import com.dreamsol.repositories.KeyEndpointMappingsRepository;
 import com.dreamsol.securities.SecurityConfig;
 import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,6 +19,8 @@ public class ProjectInitializer
 
     @Value("${project.file}")
     public String filePath;
+    @Autowired
+    KeyEndpointMappingsRepository keyEndpointMappingsRepository;
 
     @PostConstruct
     public void init()

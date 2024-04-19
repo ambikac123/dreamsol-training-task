@@ -36,7 +36,6 @@ import java.util.List;
 @RequestMapping("/api/departments")
 @Tag(name = "Department", description = "This is department API")
 @Validated
-@PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_DEMO')")
 public class DepartmentController {
     @Autowired
     private DepartmentService departmentService;
@@ -125,6 +124,14 @@ public class DepartmentController {
     {
         return departmentService.downloadDataFromDB();
     }
+    @Operation(
+            summary = "Download department excel sample ",
+            description = "This api provides a sample for excel file to save bulk data"
+    )
+    @GetMapping(value = "/download-excel-sample")
+    public ResponseEntity<Resource> downloadDepartmentExcelSample() {
+        return departmentService.getDepartmentExcelSample();
+    }
 
     @Operation(
             summary = "Download department auto generated dummy data as excel",
@@ -134,14 +141,5 @@ public class DepartmentController {
     public ResponseEntity<?> downloadDepartmentDummyDataAsExcel(@RequestParam(value = "noOfRecords", defaultValue = "10", required = false) int noOfRecords)
     {
         return departmentService.downloadDummyData(noOfRecords);
-    }
-
-    @Operation(
-            summary = "Download department excel sample ",
-            description = "This api provides a sample for excel file to save bulk data"
-    )
-    @GetMapping(value = "/download-excel-sample")
-    public ResponseEntity<Resource> downloadDepartmentExcelSample() {
-        return departmentService.getDepartmentExcelSample();
     }
 }

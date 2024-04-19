@@ -89,13 +89,6 @@ public class GlobalExceptionHandler
 		apiResponse.setSuccess(false);
 		return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(apiResponse);
 	}
-	@ExceptionHandler(RuntimeException.class)
-	public ResponseEntity<ApiResponse> runtimeExceptionHandler(RuntimeException e)
-	{
-		apiResponse.setMessage(e.getMessage());
-		apiResponse.setSuccess(false);
-		return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(apiResponse);
-	}
 	@ExceptionHandler(FileSystemException.class)
 	public ResponseEntity<ApiResponse> fileSystemExceptionHandler(FileSystemException e)
 	{
@@ -112,6 +105,13 @@ public class GlobalExceptionHandler
 	}
 	@ExceptionHandler(ExpiredJwtException.class)
 	public ResponseEntity<ApiResponse> expiredJwtExceptionHandler(ExpiredJwtException e)
+	{
+		apiResponse.setMessage(e.getMessage());
+		apiResponse.setSuccess(false);
+		return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(apiResponse);
+	}
+	@ExceptionHandler(InvalidTokenException.class)
+	public ResponseEntity<ApiResponse> invalidTokenException(InvalidTokenException e)
 	{
 		apiResponse.setMessage(e.getMessage());
 		apiResponse.setSuccess(false);

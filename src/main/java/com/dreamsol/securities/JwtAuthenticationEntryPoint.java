@@ -1,5 +1,7 @@
 package com.dreamsol.securities;
 
+import com.dreamsol.exceptions.InvalidTokenException;
+import io.jsonwebtoken.ExpiredJwtException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.security.core.AuthenticationException;
@@ -18,6 +20,14 @@ public class JwtAuthenticationEntryPoint implements AuthenticationEntryPoint
     {
         response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
         PrintWriter writer = response.getWriter();
-        writer.println("Access Denied !! "+authException.getMessage());
+        StringBuilder message = new StringBuilder();
+        if(authException.getClass().getSimpleName().equals("ExpiredJwtException"))
+        {
+            message.append("JWT token has been expired, please re-login");
+        }
+        else {
+            message.append(authException.getMessage());
+        }
+        writer.println("Access Denied !! "+message);
     }
 }
