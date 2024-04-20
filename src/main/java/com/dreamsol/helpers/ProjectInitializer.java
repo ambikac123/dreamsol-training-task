@@ -1,12 +1,9 @@
 package com.dreamsol.helpers;
 
-import com.dreamsol.repositories.KeyEndpointMappingsRepository;
-import com.dreamsol.securities.SecurityConfig;
+import com.dreamsol.repositories.EndpointMappingsRepository;
 import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
 import java.io.File;
@@ -20,7 +17,7 @@ public class ProjectInitializer
     @Value("${project.file}")
     public String filePath;
     @Autowired
-    KeyEndpointMappingsRepository keyEndpointMappingsRepository;
+    EndpointMappingsRepository keyEndpointMappingsRepository;
 
     @PostConstruct
     public void init()

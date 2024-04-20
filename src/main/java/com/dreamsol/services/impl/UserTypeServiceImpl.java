@@ -117,6 +117,8 @@ public class UserTypeServiceImpl implements UserTypeService
 		Pageable pageable = PageRequest.of(pageNumber,pageSize, sort);
 		Page<UserType> page = userTypeRepository.findByStatusTrueAndUserTypeNameLikeOrStatusTrueAndUserTypeCodeLike("%"+keywords+"%","%"+keywords+"%",pageable);
 		List<UserType> userTypeList = page.getContent();
+		if(userTypeList.isEmpty())
+			throw new ResourceNotFoundException("No contents available!");
 		List<UserTypeResponseDto> userTypeResponseDtoList = userTypeList.stream()
 				.map(this::userTypeToUserTypeResponseDto).toList();
 		AllDataResponse allDataResponse = new AllDataResponse();

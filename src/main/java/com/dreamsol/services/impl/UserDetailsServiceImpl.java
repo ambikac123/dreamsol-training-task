@@ -1,5 +1,6 @@
 package com.dreamsol.services.impl;
 
+import com.dreamsol.entities.EndpointMappings;
 import com.dreamsol.entities.Permission;
 import com.dreamsol.entities.Role;
 import com.dreamsol.entities.User;
@@ -29,14 +30,14 @@ public class UserDetailsServiceImpl implements UserDetailsService
             user.setUserPassword(new BCryptPasswordEncoder().encode("demo"));
             user.setStatus(true);
             Role role = new Role();
-            role.setRoleType("DEMO");
+            role.setRoleType("DEVELOPER");
             role.setStatus(true);
-            role.setEndPoints(List.of("/api/**"));
+            role.setEndPoints(List.of(new EndpointMappings("ACCESS_ALL","/api/**")));
             user.setRoles(List.of(role));
             Permission permission = new Permission();
             permission.setPermissionType("ALL");
             permission.setStatus(true);
-            permission.setEndPoints(List.of("/api/**"));
+            permission.setEndPoints(List.of(new EndpointMappings("ACCESS_ALL","/ap/**")));
             user.setPermissions(List.of(permission));
             return new UserDetailsImpl(user);
         }

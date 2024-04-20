@@ -2,6 +2,7 @@ package com.dreamsol.controllers;
 
 import com.dreamsol.dto.PermissionRequestDto;
 import com.dreamsol.dto.RoleRequestDto;
+import com.dreamsol.helpers.EndpointMappingsHelper;
 import com.dreamsol.securities.JwtRequest;
 import com.dreamsol.securities.JwtResponse;
 import com.dreamsol.services.PermissionService;
@@ -11,9 +12,8 @@ import com.dreamsol.services.SecurityService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import lombok.AllArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -62,6 +62,24 @@ public class SecurityController
         return refreshTokenService.createTokenByRefreshToken(refreshToken);
     }
 
+    @Operation(
+            summary = "Get all endpoints",
+            description = "This will help to get all endpoints"
+    )
+    @GetMapping("/get-endpoints")
+    public ResponseEntity<?> getAllEndpoints()
+    {
+        return securityService.getAllEndpoints();
+    }
+    @Operation(
+            summary = "Update endpoints",
+            description = "This will help to update endpoints"
+    )
+    @PutMapping("/update-endpoints")
+    public ResponseEntity<?> updateEndpoints()
+    {
+        return securityService.updateEndpoints();
+    }
     /* ---------------------------------- Role Controllers ------------------------------------------- */
     @Operation(
             summary = "Create new role",
@@ -76,7 +94,7 @@ public class SecurityController
             summary = "Update role",
             description = "This api helps to update roles"
     )
-    @PostMapping("/roles/update/{roleId}")
+    @PutMapping("/roles/update/{roleId}")
     public ResponseEntity<?> updateRole(@Valid @RequestBody RoleRequestDto roleRequestDto,@PathVariable Long roleId)
     {
         return roleService.updateRole(roleRequestDto,roleId);
@@ -85,7 +103,7 @@ public class SecurityController
             summary = "Delete role",
             description = "This api helps to delete roles"
     )
-    @PostMapping("/roles/delete/{roleId}")
+    @DeleteMapping("/roles/delete/{roleId}")
     public ResponseEntity<?> deleteRole(@PathVariable Long roleId)
     {
         return roleService.deleteRole(roleId);
@@ -94,7 +112,7 @@ public class SecurityController
             summary = "Get role",
             description = "This api helps to get role"
     )
-    @PostMapping("/roles/get/{roleId}")
+    @GetMapping("/roles/get/{roleId}")
     public ResponseEntity<?> getRole(@PathVariable Long roleId)
     {
         return roleService.getRole(roleId);
@@ -103,7 +121,7 @@ public class SecurityController
             summary = "Get all roles",
             description = "This api helps to get all role"
     )
-    @PostMapping("/roles/get-all")
+    @GetMapping("/roles/get-all")
     public ResponseEntity<?> getAllRoles()
     {
         return roleService.getAllRoles();
