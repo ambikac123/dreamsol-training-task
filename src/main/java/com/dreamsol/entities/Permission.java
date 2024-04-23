@@ -8,17 +8,14 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
-import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
-import lombok.Getter;
+import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
 
 import java.time.LocalDateTime;
 import java.util.List;
 
-@Getter
-@Setter
+@Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
@@ -32,7 +29,7 @@ public class Permission
 
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(name = "permission_endpoints", joinColumns = @JoinColumn(name = "permissionId"), inverseJoinColumns = @JoinColumn(name = "endPointKey"))
-    private List<EndpointMappings> endPoints;
+    private List<Endpoint> endPoints;
 
     private boolean status;
 

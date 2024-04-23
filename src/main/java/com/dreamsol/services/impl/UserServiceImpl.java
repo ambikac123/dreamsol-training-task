@@ -43,6 +43,7 @@ import com.dreamsol.response.UserExcelUploadResponse;
 import com.dreamsol.services.DepartmentService;
 import com.dreamsol.services.DocumentService;
 import com.dreamsol.services.PermissionService;
+import com.dreamsol.services.RoleService;
 import com.dreamsol.services.UserService;
 import com.dreamsol.services.UserTypeService;
 import lombok.AllArgsConstructor;
@@ -89,6 +90,7 @@ public class UserServiceImpl implements UserService
     private DocumentService documentService;
     private DepartmentService departmentService;
     private UserTypeService userTypeService;
+    private RoleService roleService;
     private PermissionService permissionService;
     private ImageHelper imageHelper;
     private GlobalHelper globalHelper;
@@ -462,7 +464,7 @@ public class UserServiceImpl implements UserService
             if(!user.getRoles().isEmpty())
             {
                 List<RoleResponseDto> roleResponseDtoList = user.getRoles()
-                        .stream().map((role)->roleToRoleResponseDto(role)).toList();
+                        .stream().map((role)->roleService.roleToRoleResponseDto(role)).toList();
                 userSingleDataResponseDto.setRoles(roleResponseDtoList);
             }
             if(!user.getPermissions().isEmpty())
@@ -542,17 +544,10 @@ public class UserServiceImpl implements UserService
             Role role = roleRepository.findByRoleType(roleRequestDto.getRoleType());
             if (!Objects.isNull(role) && role.isStatus())
                 return role;
-            throw new ResourceNotFoundException("User Role", "roleName:" + roleRequestDto.getRoleType(), 0);
+            throw new ResourceNotFoundException("User Role", "roleName:" + roleRequestDto.getRoleType()+" not found!", 0);
         }catch(Exception e)
         {
             throw new RuntimeException("Error occurred while varifying user roles, Reason: "+e.getMessage());
         }
     }
-    public RoleResponseDto roleToRoleResponseDto(Role role)
-    {
-        RoleResponseDto roleResponseDto = new RoleResponseDto();
-        BeanUtils.copyProperties(role,roleResponseDto);
-        return roleResponseDto;
-    }
-
 }

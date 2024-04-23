@@ -1,6 +1,6 @@
 package com.dreamsol.helpers;
 
-import com.dreamsol.repositories.EndpointMappingsRepository;
+import com.dreamsol.repositories.EndpointRepository;
 import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -17,7 +17,7 @@ public class ProjectInitializer
     @Value("${project.file}")
     public String filePath;
     @Autowired
-    EndpointMappingsRepository keyEndpointMappingsRepository;
+    EndpointRepository keyEndpointRepository;
 
     @PostConstruct
     public void init()

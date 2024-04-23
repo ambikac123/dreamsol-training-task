@@ -1,16 +1,18 @@
 package com.dreamsol.helpers;
 
-import com.dreamsol.entities.EndpointMappings;
+import com.dreamsol.entities.Endpoint;
 import com.dreamsol.entities.Permission;
 import com.dreamsol.entities.Role;
-import com.dreamsol.repositories.EndpointMappingsRepository;
+import com.dreamsol.entities.User;
+import com.dreamsol.repositories.EndpointRepository;
 import com.dreamsol.repositories.PermissionRepository;
 import com.dreamsol.repositories.RoleRepository;
+import com.dreamsol.services.impl.UserDetailsImpl;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 
-import java.util.Arrays;
-import java.util.List;
 import java.util.Map;
 
 @Component
@@ -18,44 +20,38 @@ public class RoleAndPermissionHelper
 {
     @Autowired private PermissionRepository permissionRepository;
     @Autowired private RoleRepository roleRepository;
-    @Autowired private EndpointMappingsRepository endpointMappingsRepository;
+    @Autowired private EndpointRepository endpointRepository;
     @Autowired private EndpointMappingsHelper endpointMappingsHelper;
-    private final Map<String,String[]> allRoleAndPermissionMap;
-    public RoleAndPermissionHelper(Map<String,String[]> allRoleAndPermissionMap)
+    private final Map<String,String[]> authorityNamesAndUrlsMap;
+    public RoleAndPermissionHelper(Map<String,String[]> authorityNamesAndUrlsMap)
     {
-        this.allRoleAndPermissionMap = allRoleAndPermissionMap;
-        allRoleAndPermissionMap.put("ROLE_DEVELOPER",new String[]{"ACCESS_ALL"});
-        allRoleAndPermissionMap.put("ROLE_ALL",new String[]{"ACCESS_ALL"});
+        this.authorityNamesAndUrlsMap = authorityNamesAndUrlsMap;
     }
-   public Map<String,String[]> getAllRoleAndPermissionMap()
+   public Map<String,String[]> getAuthorityNameAndUrlsMap()
     {
-        List<Role> roles = roleRepository.findAllByStatusTrue();
-        List<Permission> permissions = permissionRepository.findAllByStatusTrue();
-        for(Role role : roles)
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        UserDetailsImpl userDetailsImpl = (UserDetailsImpl) authentication.getPrincipal();
+        User user = userDetailsImpl.getUser();
+        for(Role role : user.getRoles())
         {
             String roleType = role.getRoleType();
-            String[] endPoints = role.getEndPoints()
+            String[] endPointUrls = role.getEndPoints()
                     .stream()
-                    .map(EndpointMappings::getEndPointKey)
+                    .map(Endpoint::getEndPointLink)
                     .toList()
                     .toArray(new String[0]);
-            allRoleAndPermissionMap.put("ROLE_"+roleType,endPoints);
+            authorityNamesAndUrlsMap.put(roleType,endPointUrls);
         }
-        for (Permission permission : permissions)
+        for (Permission permission : user.getPermissions())
         {
             String permissionType = permission.getPermissionType();
-            String[] endPoints = permission.getEndPoints()
+            String[] endPointUrls = permission.getEndPoints()
                             .stream()
-                            .map(EndpointMappings::getEndPointKey)
+                            .map(Endpoint::getEndPointLink)
                             .toList()
                             .toArray(new String[0]);
-            allRoleAndPermissionMap.put(permissionType,endPoints);
+            authorityNamesAndUrlsMap.put(permissionType,endPointUrls);
         }
-        return allRoleAndPermissionMap;
-    }
-    public void addMappingInDB()
-    {
-        Map<String,String> endpointMappings = endpointMappingsHelper.getEndpointMappings();
-        System.out.println(endpointMappings);
+        return authorityNamesAndUrlsMap;
     }
 }

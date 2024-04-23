@@ -2,9 +2,7 @@ package com.dreamsol.controllers;
 
 import com.dreamsol.dto.PermissionRequestDto;
 import com.dreamsol.dto.RoleRequestDto;
-import com.dreamsol.helpers.EndpointMappingsHelper;
-import com.dreamsol.securities.JwtRequest;
-import com.dreamsol.securities.JwtResponse;
+import com.dreamsol.securities.LoginRequest;
 import com.dreamsol.services.PermissionService;
 import com.dreamsol.services.RefreshTokenService;
 import com.dreamsol.services.RoleService;
@@ -13,7 +11,6 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -39,7 +36,7 @@ public class SecurityController
             description = "This api helps to generate JWT token and login"
     )
     @PostMapping("/login")
-    public ResponseEntity<JwtResponse> login(@RequestBody JwtRequest request)
+    public ResponseEntity<?> login(@RequestBody LoginRequest request)
     {
         return securityService.login(request);
     }

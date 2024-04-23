@@ -6,7 +6,7 @@ import com.dreamsol.repositories.RefreshTokenRepository;
 import com.dreamsol.repositories.UserRepository;
 import com.dreamsol.response.ApiResponse;
 import com.dreamsol.securities.JwtHelper;
-import com.dreamsol.securities.JwtResponse;
+import com.dreamsol.securities.LoginResponse;
 import com.dreamsol.services.RefreshTokenService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -60,11 +60,11 @@ public class RefreshTokenServiceImpl implements RefreshTokenService
         if(isValidRefreshToken(refreshTokenDB)) {
             User user = refreshTokenDB.getUser();
             String newToken = jwtHelper.generateToken(new UserDetailsImpl(user));
-            JwtResponse jwtResponse = JwtResponse.builder()
+            LoginResponse loginResponse = LoginResponse.builder()
                     .refreshToken(refreshToken)
                     .accessToken(newToken)
                     .build();
-            return ResponseEntity.status(HttpStatus.OK).body(jwtResponse);
+            return ResponseEntity.status(HttpStatus.OK).body(loginResponse);
         }
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ApiResponse("Error Occurred while creating new access token, Reason: Refresh token has been expired!",false));
     }

@@ -1,6 +1,5 @@
 package com.dreamsol.dto;
 
-import com.dreamsol.entities.EndpointMappings;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;

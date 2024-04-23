@@ -22,30 +22,26 @@ public class UserDetailsImpl implements UserDetails
     }
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        List<Role> roleList = user.getRoles();
         List<GrantedAuthority> grantedAuthorityList = new ArrayList<>();
-        for(Role role : roleList)
+        for(Role role : user.getRoles())
         {
-            grantedAuthorityList.add(new SimpleGrantedAuthority("ROLE_"+role.getRoleType()));
+            grantedAuthorityList.add(new SimpleGrantedAuthority(role.getRoleType()));
         }
-        List<Permission> permissionList = user.getPermissions();
-        for(Permission permission : permissionList)
+        for(Permission permission : user.getPermissions())
         {
-            grantedAuthorityList.add(new SimpleGrantedAuthority("ROLE_"+permission.getPermissionType()));
+            grantedAuthorityList.add(new SimpleGrantedAuthority(permission.getPermissionType()));
         }
         return grantedAuthorityList;
-    }
-
-    @Override
-    public String getPassword() {
-        return user.getUserPassword();
     }
 
     @Override
     public String getUsername() {
         return user.getUserEmail();
     }
-
+    @Override
+    public String getPassword() {
+        return user.getUserPassword();
+    }
     @Override
     public boolean isAccountNonExpired() {
         return user.isStatus();
