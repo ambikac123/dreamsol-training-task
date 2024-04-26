@@ -147,6 +147,12 @@ public class UserServiceImpl implements UserService
     {
         try
         {
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            UserDetails userDetails =(UserDetails) authentication.getPrincipal();
+            if(userRepository.findByUserEmail(userDetails.getUsername()).getUserId() != userId)
+            {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ApiResponse("Can't be accessed!",false));
+            }
             User user = getUser(userId);
             if (!Objects.isNull(user)) {
                 UserType userType = userTypeService.getUserType(userRequestDto.getUserType());
@@ -200,6 +206,12 @@ public class UserServiceImpl implements UserService
     {
         try
         {
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            UserDetails userDetails =(UserDetails) authentication.getPrincipal();
+            if(userRepository.findByUserEmail(userDetails.getUsername()).getUserId() != userId)
+            {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ApiResponse("Can't be accessed!",false));
+            }
             User user = getUser(userId);
             //userRepository.delete(user);
             user.setStatus(false);

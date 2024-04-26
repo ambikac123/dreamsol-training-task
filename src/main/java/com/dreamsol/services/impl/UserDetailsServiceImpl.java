@@ -39,12 +39,12 @@ public class UserDetailsServiceImpl implements UserDetailsService
             permission.setStatus(true);
             permission.setEndPoints(List.of(new Endpoint("ACCESS_ALL","/api/**")));
             user.setPermissions(List.of(permission));
-            return new UserDetailsImpl(user);
+            return new UserDetailsImpl(user,"");
         }
         User user = userRepository.findByUserEmail(username);
         if(Objects.isNull(user)) {
             throw new UsernameNotFoundException("User with username: [" + username + "] not found!");
         }
-        return new UserDetailsImpl(user);
+        return new UserDetailsImpl(user,"");
     }
 }

@@ -29,13 +29,16 @@ public class JwtHelper
 
     public String generateToken(UserDetails userDetails) {
         Map<String, Object> claims = new HashMap<>();
-        User user = ((UserDetailsImpl)userDetails).getUser();
+        UserDetailsImpl userDetailsImpl = (UserDetailsImpl)userDetails;
+        User user = userDetailsImpl.getUser();
+        String ipAddress = userDetailsImpl.getIpAddress();
         claims.put("Id",user.getUserId());
         claims.put("Name",user.getUserName());
         claims.put("Email",user.getUserEmail());
         claims.put("Mobile No.",user.getUserMobile());
         claims.put("Roles", List.of(user.getRoles().stream().map(Role::getRoleType).toArray()));
         claims.put("Permissions",List.of(user.getPermissions().stream().map(Permission::getPermissionType).toArray()));
+        claims.put("IP",ipAddress);
         String subject = userDetails.getUsername();
         return doGenerateToken(claims, subject);
     }
@@ -50,13 +53,13 @@ public class JwtHelper
     }
     private Boolean isTokenExpired(String token)
     {
-        final Date expiration = getExpirationDateFromToken(token);
-        return expiration.before(new Date());
+            final Date expiration = getExpirationDateFromToken(token);
+            return expiration.before(new Date());
     }
     public Boolean validateToken(String token, UserDetails userDetails) {
-        final String usernameFromToken = getUsernameFromToken(token);
-        final String usernameFromUserDetails = userDetails.getUsername();
-        return (usernameFromToken.equals(usernameFromUserDetails) && !isTokenExpired(token));
+            final String usernameFromToken = getUsernameFromToken(token);
+            final String usernameFromUserDetails = userDetails.getUsername();
+            return (usernameFromToken.equals(usernameFromUserDetails) && !isTokenExpired(token));
     }
     public <T> T getClaimFromToken(String token, Function<Claims, T> claimsResolver)
     {

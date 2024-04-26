@@ -1,9 +1,8 @@
 package com.dreamsol.securities;
 
-import com.dreamsol.helpers.EndpointMappingsHelper;
 import com.dreamsol.helpers.RoleAndPermissionHelper;
-import com.dreamsol.repositories.PermissionRepository;
-import com.dreamsol.repositories.RoleRepository;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -16,6 +15,7 @@ import org.springframework.security.config.annotation.web.configurers.AbstractHt
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.web.DefaultSecurityFilterChain;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
@@ -29,25 +29,30 @@ import java.util.Set;
 public class SecurityConfig
 {
     @Autowired private JwtAuthenticationEntryPoint point;
+    @Autowired private CustomAccessDeniedHandler customAccessDeniedHandler;
     @Autowired private JwtAuthenticationFilter filter;
-    @Autowired RoleRepository roleRepository;
-    @Autowired PermissionRepository permissionRepository;
-    @Autowired RoleAndPermissionHelper roleAndPermissionHelper;
-    @Autowired EndpointMappingsHelper endpointMappingsHelper;
+    @Autowired private RoleAndPermissionHelper roleAndPermissionHelper;
     private HttpSecurity httpSecurity;
+    private final String[] PUBLIC_URLS = {
+            "/swagger-ui/**",
+            "/v3/api-docs/**",
+            "/api/login",
+            "/api/re-generate-token",
+            "/api/update-endpoints",
+            "/api/get-endpoints"
+    };
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception
     {
         this.httpSecurity = http;
         httpSecurity.csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth->auth
-                        .requestMatchers("/swagger-ui/**","/v3/api-docs/**",
-                                "/api/login",
-                                "/api/logout",
-                                "/api/re-generate-token",
-                                "/api/update-endpoints").permitAll()
+                        .requestMatchers(PUBLIC_URLS).permitAll()
                 );
-        httpSecurity.exceptionHandling(ex->ex.authenticationEntryPoint(point))
+        httpSecurity.exceptionHandling(exception->exception
+                        .authenticationEntryPoint(point)
+                        .accessDeniedHandler(customAccessDeniedHandler)
+                )
                 .sessionManagement(session->session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
         httpSecurity.addFilterBefore(filter, UsernamePasswordAuthenticationFilter.class);
         return httpSecurity.build();
@@ -66,6 +71,7 @@ public class SecurityConfig
                         Set.of(authorityNamesAndUrls.getValue())
                 );
             }
+            authorityUrls.add("/api/logout");
             httpSecurity.authorizeHttpRequests(auth->auth
                     .requestMatchers(authorityUrls.toArray(new String[]{}))
                     .hasAnyAuthority(authorityTypes.toArray(new String[]{}))

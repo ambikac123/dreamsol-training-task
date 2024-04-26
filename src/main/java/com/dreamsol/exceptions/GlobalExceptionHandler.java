@@ -2,6 +2,7 @@ package com.dreamsol.exceptions;
 
 import com.dreamsol.response.ApiResponse;
 import io.jsonwebtoken.ExpiredJwtException;
+import io.jsonwebtoken.security.SignatureException;
 import jakarta.validation.ConstraintViolationException;
 import org.springframework.dao.DataAccessException;
 import org.springframework.http.HttpStatus;
@@ -112,7 +113,7 @@ public class GlobalExceptionHandler
 		return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(apiResponse);
 	}
 	@ExceptionHandler(InvalidTokenException.class)
-	public ResponseEntity<ApiResponse> invalidTokenException(InvalidTokenException e)
+	public ResponseEntity<ApiResponse> invalidTokenExceptionHandler(InvalidTokenException e)
 	{
 		apiResponse.setMessage(e.getMessage());
 		apiResponse.setSuccess(false);
@@ -120,7 +121,14 @@ public class GlobalExceptionHandler
 	}
 
 	@ExceptionHandler(HttpRequestMethodNotSupportedException.class)
-	public ResponseEntity<ApiResponse> httpRequestMethodNotSupportedException(HttpRequestMethodNotSupportedException e)
+	public ResponseEntity<ApiResponse> httpRequestMethodNotSupportedExceptionHandler(HttpRequestMethodNotSupportedException e)
+	{
+		apiResponse.setMessage(e.getMessage());
+		apiResponse.setSuccess(false);
+		return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(apiResponse);
+	}
+	@ExceptionHandler(SignatureException.class)
+	public ResponseEntity<ApiResponse> signatureExceptionHandler(SignatureException e)
 	{
 		apiResponse.setMessage(e.getMessage());
 		apiResponse.setSuccess(false);

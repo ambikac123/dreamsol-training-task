@@ -35,7 +35,7 @@ public class SecurityController
             summary = "Login API",
             description = "This api helps to generate JWT token and login"
     )
-    @PostMapping("/login")
+    @GetMapping("/login")
     public ResponseEntity<?> login(@RequestBody LoginRequest request)
     {
         return securityService.login(request);
@@ -44,7 +44,7 @@ public class SecurityController
             summary = "Logout API",
             description = "This api helps to logout"
     )
-    @PostMapping("/logout")
+    @DeleteMapping("/logout")
     public ResponseEntity<?> logout()
     {
         return securityService.logout();
@@ -53,7 +53,7 @@ public class SecurityController
             summary = "Create new token",
             description = "Create new token using refresh token"
     )
-    @PostMapping("/re-generate-token")
+    @GetMapping("/re-generate-token")
     public ResponseEntity<?> reGenerateToken(@RequestParam String refreshToken)
     {
         return refreshTokenService.createTokenByRefreshToken(refreshToken);

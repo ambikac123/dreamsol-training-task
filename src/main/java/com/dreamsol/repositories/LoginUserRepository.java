@@ -1,9 +1,10 @@
 package com.dreamsol.repositories;
 
-import com.dreamsol.entities.CurrentUser;
+import com.dreamsol.entities.LoginUser;
 import org.springframework.data.jpa.repository.JpaRepository;
 
-public interface CurrentUserRepository extends JpaRepository<CurrentUser,Long>
+public interface LoginUserRepository extends JpaRepository<LoginUser,Long>
 {
-    CurrentUser findByUsername(String username);
+    LoginUser findByUsername(String username);
+    LoginUser findByIpAddress(String hostAddress);
 }

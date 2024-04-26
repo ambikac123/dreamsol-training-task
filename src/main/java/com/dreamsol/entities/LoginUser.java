@@ -6,28 +6,29 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import lombok.AllArgsConstructor;
-import lombok.Data;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.LocalDateTime;
-import java.util.Date;
 
 @Getter
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
 @Entity
-public class CurrentUser
+public class LoginUser
 {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private long currentUserId;
+    private long loginUserId;
 
+    @Column(nullable = false)
     private String username;
 
-    private LocalDateTime loginAt;
+    @Column(nullable = false)
+    private String ipAddress;
 
-    private boolean loginStatus;
+    @Column(nullable = false)
+    private LocalDateTime loginAt;
 }

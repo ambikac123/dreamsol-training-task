@@ -1,7 +1,9 @@
 package com.dreamsol.services.impl;
 
+import com.dreamsol.entities.LoginUser;
 import com.dreamsol.entities.RefreshToken;
 import com.dreamsol.entities.User;
+import com.dreamsol.repositories.LoginUserRepository;
 import com.dreamsol.repositories.RefreshTokenRepository;
 import com.dreamsol.repositories.UserRepository;
 import com.dreamsol.response.ApiResponse;
@@ -12,6 +14,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.web.authentication.WebAuthenticationDetails;
 import org.springframework.stereotype.Service;
 
 import java.util.Objects;
@@ -23,6 +27,7 @@ public class RefreshTokenServiceImpl implements RefreshTokenService
     @Autowired
     private RefreshTokenRepository refreshTokenRepository;
     @Autowired private UserRepository userRepository;
+    @Autowired private LoginUserRepository loginUserRepository;
     @Autowired private JwtHelper jwtHelper;
     @Value("${jwt.validity.refresh-token}")
     private long REFRESH_TOKEN_VALIDITY;
@@ -56,13 +61,26 @@ public class RefreshTokenServiceImpl implements RefreshTokenService
     }
     public ResponseEntity<?> createTokenByRefreshToken(String refreshToken)
     {
+        WebAuthenticationDetails webAuthenticationDetails = (WebAuthenticationDetails) SecurityContextHolder.getContext().getAuthentication().getDetails();
+        String clientIP = webAuthenticationDetails.getRemoteAddress();
+        LoginUser loginUser = loginUserRepository.findByIpAddress(clientIP);
+        if (loginUser==null)
+        {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(new ApiResponse("Please! Login, before accessing this resource",false));
+        }
         RefreshToken refreshTokenDB = refreshTokenRepository.findByRefreshToken(refreshToken);
-        if(isValidRefreshToken(refreshTokenDB)) {
+        if(refreshTokenDB==null)
+        {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ApiResponse("Refresh token doesn't exist. Please! login again to get new token and refresh token.",false));
+        }
+        if(isValidRefreshToken(refreshTokenDB))
+        {
             User user = refreshTokenDB.getUser();
-            String newToken = jwtHelper.generateToken(new UserDetailsImpl(user));
+            UserDetailsImpl userDetailsImpl = new UserDetailsImpl(user,clientIP);
+            String newToken = jwtHelper.generateToken(userDetailsImpl);
             LoginResponse loginResponse = LoginResponse.builder()
-                    .refreshToken(refreshToken)
                     .accessToken(newToken)
+                    .refreshToken(refreshToken)
                     .build();
             return ResponseEntity.status(HttpStatus.OK).body(loginResponse);
         }

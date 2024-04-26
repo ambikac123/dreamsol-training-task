@@ -2,17 +2,22 @@ package com.dreamsol.securities;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.security.authentication.AccountExpiredException;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.CredentialsExpiredException;
+import org.springframework.security.authentication.DisabledException;
+import org.springframework.security.authentication.LockedException;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.security.SignatureException;
 
 @Component
 public class JwtAuthenticationEntryPoint implements AuthenticationEntryPoint
 {
-
     @Override
     public void commence(HttpServletRequest request, HttpServletResponse response, AuthenticationException e) throws IOException
     {
@@ -20,4 +25,5 @@ public class JwtAuthenticationEntryPoint implements AuthenticationEntryPoint
         PrintWriter writer = response.getWriter();
         writer.println("Access Denied !! "+e.getMessage());
     }
+
 }
