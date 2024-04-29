@@ -26,8 +26,8 @@ public class Role
     private String roleType;
 
     @ManyToMany(fetch = FetchType.EAGER)
-    @JoinTable(name = "role_endpoints", joinColumns = @JoinColumn(name = "roleId"), inverseJoinColumns = @JoinColumn(name = "endPointKey"))
-    private List<Endpoint> endPoints;
+    @JoinTable(name = "role_permission", joinColumns = @JoinColumn(name = "roleId"), inverseJoinColumns = @JoinColumn(name = "permissionId"))
+    private List<Permission> permissions;
 
     private boolean status;
 

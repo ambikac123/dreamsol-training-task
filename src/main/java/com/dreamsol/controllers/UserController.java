@@ -4,6 +4,7 @@ import java.util.List;
 
 import com.dreamsol.response.UserExcelUploadResponse;
 import io.swagger.v3.oas.annotations.Hidden;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
@@ -35,7 +36,8 @@ import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/api/users")
-@Tag(name = "User", description = "This API handles all required operation related to user entity")
+@Tag(name = "USER API", description = "This API handles all required operation related to user entity")
+@SecurityRequirement(name = "bearerAuth")
 @Validated
 public class UserController 
 {

@@ -12,7 +12,6 @@ import java.util.stream.Collectors;
 
 import com.dreamsol.dto.DepartmentSingleDataResponseDto;
 import com.dreamsol.dto.DocumentSingleDataResponseDto;
-import com.dreamsol.dto.PermissionResponseDto;
 import com.dreamsol.dto.RoleRequestDto;
 import com.dreamsol.dto.RoleResponseDto;
 import com.dreamsol.dto.UserRequestDto;
@@ -20,6 +19,7 @@ import com.dreamsol.dto.UserSingleDataResponseDto;
 import com.dreamsol.dto.UserTypeSingleDataResponseDto;
 import com.dreamsol.entities.Department;
 import com.dreamsol.entities.Document;
+import com.dreamsol.entities.Endpoint;
 import com.dreamsol.entities.Permission;
 import com.dreamsol.entities.Role;
 import com.dreamsol.entities.User;
@@ -32,6 +32,7 @@ import com.dreamsol.helpers.ImageHelper;
 import com.dreamsol.helpers.PageInfo;
 import com.dreamsol.repositories.DepartmentRepository;
 import com.dreamsol.repositories.DocumentRepository;
+import com.dreamsol.repositories.LoginUserRepository;
 import com.dreamsol.repositories.PermissionRepository;
 import com.dreamsol.repositories.RoleRepository;
 import com.dreamsol.repositories.UserImageRepository;
@@ -87,6 +88,7 @@ public class UserServiceImpl implements UserService
     private UserImageRepository userImageRepository;
     private RoleRepository roleRepository;
     private PermissionRepository permissionRepository;
+    private LoginUserRepository loginUserRepository;
     private DocumentService documentService;
     private DepartmentService departmentService;
     private UserTypeService userTypeService;
@@ -122,11 +124,6 @@ public class UserServiceImpl implements UserService
                         .map((roleRequestDto)->roleRequestDtoToRole(roleRequestDto))
                         .toList();
                 user.setRoles(roleList);
-                List<Permission> permissionList = userRequestDto.getPermissions()
-                        .stream()
-                        .map((permissionRequestDto)->permissionService.permissionRequestDtoToPermission(permissionRequestDto))
-                        .toList();
-                user.setPermissions(permissionList);
                 try{
                     userRepository.save(user);
                 }catch (DataAccessException e)
@@ -181,11 +178,6 @@ public class UserServiceImpl implements UserService
                         .map((roleRequestDto)->roleRequestDtoToRole(roleRequestDto))
                         .toList();
                 user.setRoles(roleList);
-                List<Permission> permissionList = userRequestDto.getPermissions()
-                        .stream()
-                        .map((permissionRequestDto)->permissionService.permissionRequestDtoToPermission(permissionRequestDto))
-                        .toList();
-                user.setPermissions(permissionList);
                 try {
                     userRepository.save(user);
                     return ResponseEntity.status(HttpStatus.OK).body(new ApiResponse("user with id " + userId + " updated successfully!", true));
@@ -229,8 +221,8 @@ public class UserServiceImpl implements UserService
     public ResponseEntity<?> getSingleUser(Long userId)
     {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        UserDetails userDetails =(UserDetails) authentication.getPrincipal();
-        if(userRepository.findByUserEmail(userDetails.getUsername()).getUserId() != userId)
+        UserDetailsImpl userDetailsImpl =(UserDetailsImpl) authentication.getPrincipal();
+        if(loginUserRepository.findByUsername(userDetailsImpl.getUsername()) == null && userDetailsImpl.getUser().getUserId() != userId)
         {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ApiResponse("Can't be accessed!",false));
         }
@@ -479,12 +471,6 @@ public class UserServiceImpl implements UserService
                         .stream().map((role)->roleService.roleToRoleResponseDto(role)).toList();
                 userSingleDataResponseDto.setRoles(roleResponseDtoList);
             }
-            if(!user.getPermissions().isEmpty())
-            {
-                List<PermissionResponseDto> permissionResponseDtoList = user.getPermissions()
-                        .stream().map((permission)->permissionService.permissionToPermissionResponseDto(permission)).toList();
-                userSingleDataResponseDto.setPermissions(permissionResponseDtoList);
-            }
             if(!Objects.isNull(user.getUserType()))
             {
                 UserTypeSingleDataResponseDto userTypeSingleDataResponseDto = new UserTypeSingleDataResponseDto();
@@ -560,6 +546,28 @@ public class UserServiceImpl implements UserService
         }catch(Exception e)
         {
             throw new RuntimeException("Error occurred while varifying user roles, Reason: "+e.getMessage());
+        }
+    }
+    public User getDemoUser()
+    {
+        try {
+            User user = new User();
+            user.setUserEmail("demo");
+            user.setUserPassword(passwordEncoder.encode("demo"));
+            user.setStatus(true);
+            Role role = new Role();
+            role.setRoleType("DEMO");
+            Permission permission = new Permission();
+            permission.setPermissionType("ALL");
+            Endpoint endpoint = new Endpoint("ACCESS_ALL", "/api/**");
+            permission.setEndPoints(List.of(endpoint));
+            role.setPermissions(List.of(permission));
+            role.setStatus(true);
+            user.setRoles(List.of(role));
+            return user;
+        }catch(Exception e)
+        {
+            throw new RuntimeException(e.getMessage());
         }
     }
 }

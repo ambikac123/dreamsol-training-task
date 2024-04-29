@@ -31,4 +31,5 @@ public class LoginUser
 
     @Column(nullable = false)
     private LocalDateTime loginAt;
+
 }

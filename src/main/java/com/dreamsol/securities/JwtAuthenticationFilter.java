@@ -12,12 +12,15 @@ import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
+import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.authorization.AuthorizationManager;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.access.intercept.AuthorizationFilter;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
@@ -25,6 +28,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.Arrays;
+import java.util.List;
 
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
@@ -32,27 +36,48 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private static final String TOKEN_PREFIX = "Bearer";
     private static final String AUTH_HEADER = "Authorization";
     private static final String LOGIN_URI = "/api/login";
-    private static final String RE_GENERATE_TOKEN_URL = "/api/re-generate-token";
 
     @Autowired private JwtHelper jwtHelper;
     @Autowired private UserDetailsService userDetailsService;
     @Autowired private LoginUserRepository loginUserRepository;
     @Autowired private JwtAuthenticationEntryPoint entryPoint;
+    private final String[] PUBLIC_URLS = {
+            "/swagger-ui/index.html",
+            "/swagger-ui/swagger-ui.css",
+            "/swagger-ui/index.css",
+            "/swagger-ui/swagger-ui-bundle.js",
+            "/swagger-ui/swagger-initializer.js",
+            "/swagger-ui/swagger-ui-standalone-preset.js",
+            "/v3/api-docs/swagger-config",
+            "/swagger-ui/favicon-32x32.png",
+            "/v3/api-docs",
+            "/api/login",
+            "/api/re-generate-token",
+            "/api/update-endpoints",
+            "/api/get-endpoints"
+    };
+    List<String> publicUrls = List.of(PUBLIC_URLS);
     @Override
-    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
+    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException
+    {
         String requestURI = request.getRequestURI();
-        if(requestURI.equals(LOGIN_URI))
+        if(publicUrls.indexOf(requestURI)!=-1)
         {
-            if(!requestForLogin(request, response))
+            if(requestURI.equals(LOGIN_URI))
             {
-                sendError(response,"Login Failed: The requested client machine is already in use i.e. A user already logged in with this machine.",HttpStatus.FORBIDDEN);
-                return;
+                if(canLogin(request, response))
+                {
+                    ;
+                }else{
+                    sendError(response,"Login Failed: The requested client machine is already in use i.e. A user already logged in with this machine.",HttpStatus.FORBIDDEN);
+                    return;
+                }
             }
-        }else if(requestURI.equals(RE_GENERATE_TOKEN_URL)){
-
-            AnonymousAuthenticationToken authentication = new AnonymousAuthenticationToken("anonymous", request.getRemoteAddr(), Arrays.asList(new SimpleGrantedAuthority("ROLE_ANONYMOUS")));
-            authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-            SecurityContextHolder.getContext().setAuthentication(authentication);
+            else{
+                AnonymousAuthenticationToken authentication = new AnonymousAuthenticationToken("anonymous", request.getRemoteAddr(), Arrays.asList(new SimpleGrantedAuthority("ROLE_ANONYMOUS")));
+                authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                SecurityContextHolder.getContext().setAuthentication(authentication);
+            }
         }
         else {
             String tokenHeader = request.getHeader(AUTH_HEADER);
@@ -68,7 +93,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     LoginUser loginUser = loginUserRepository.findByUsername(usernameFromToken);
                     if(loginUser==null)
                     {
-                        sendError(response,"You are logged out. Please! login again to access this resource!",HttpStatus.BAD_REQUEST);
+                        sendError(response,"You are already logged out. Please! login again to access this resource!",HttpStatus.BAD_REQUEST);
                         return;
                     }
                     String tokenIP = jwtHelper.getClaimFromToken(actualToken, (claims -> claims.get("IP"))).toString();
@@ -77,6 +102,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                         UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
                         authenticationToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                         SecurityContextHolder.getContext().setAuthentication(authenticationToken);
+
                     } else {
                         sendError(response, "Requested token and requested user not matched!", HttpStatus.FORBIDDEN);
                         return;
@@ -91,10 +117,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         filterChain.doFilter(request, response);
     }
 
-    private boolean requestForLogin(HttpServletRequest request, HttpServletResponse response) throws IOException {
+    private boolean canLogin(HttpServletRequest request, HttpServletResponse response) throws IOException
+    {
         String clientIP = request.getRemoteAddr();
         LoginUser loginUser = loginUserRepository.findByIpAddress(clientIP);
-        if (loginUser != null) {
+        if (loginUser != null)
+        {
             return false;
         } else {
             AnonymousAuthenticationToken authentication = new AnonymousAuthenticationToken("anonymous", request.getRemoteAddr(), Arrays.asList(new SimpleGrantedAuthority("ROLE_ANONYMOUS")));

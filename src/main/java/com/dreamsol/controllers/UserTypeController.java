@@ -2,6 +2,7 @@ package com.dreamsol.controllers;
 
 import com.dreamsol.dto.UserTypeResponseDto;
 import com.dreamsol.response.AllDataResponse;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.Size;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,6 +34,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/usertypes")
 @Tag(name = "UserType", description = "This is usertype API")
+@SecurityRequirement(name = "bearerAuth")
 @Validated
 public class UserTypeController 
 {

@@ -37,7 +37,6 @@ public class JwtHelper
         claims.put("Email",user.getUserEmail());
         claims.put("Mobile No.",user.getUserMobile());
         claims.put("Roles", List.of(user.getRoles().stream().map(Role::getRoleType).toArray()));
-        claims.put("Permissions",List.of(user.getPermissions().stream().map(Permission::getPermissionType).toArray()));
         claims.put("IP",ipAddress);
         String subject = userDetails.getUsername();
         return doGenerateToken(claims, subject);

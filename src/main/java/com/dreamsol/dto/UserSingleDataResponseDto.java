@@ -20,7 +20,6 @@ public class UserSingleDataResponseDto
 	private UserTypeSingleDataResponseDto userType;
 	private DepartmentSingleDataResponseDto department;
 	private List<RoleResponseDto> roles;
-	private List<PermissionResponseDto> permissions;
 	private boolean status;
 	private LocalDateTime timeStamp;
 }

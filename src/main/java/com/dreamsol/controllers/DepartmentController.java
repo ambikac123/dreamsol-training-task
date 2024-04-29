@@ -6,6 +6,7 @@ import com.dreamsol.response.ApiResponse;
 import com.dreamsol.services.DepartmentService;
 import com.dreamsol.dto.DepartmentResponseDto;
 
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
 
@@ -34,6 +35,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/departments")
 @Tag(name = "Department", description = "This is department API")
+@SecurityRequirement(name = "bearerAuth")
 @Validated
 public class DepartmentController {
     @Autowired

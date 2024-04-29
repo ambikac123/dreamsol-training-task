@@ -1,8 +1,6 @@
 package com.dreamsol.securities;
 
 import com.dreamsol.helpers.RoleAndPermissionHelper;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -15,10 +13,10 @@ import org.springframework.security.config.annotation.web.configurers.AbstractHt
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.web.DefaultSecurityFilterChain;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -28,7 +26,7 @@ import java.util.Set;
 @EnableMethodSecurity
 public class SecurityConfig
 {
-    @Autowired private JwtAuthenticationEntryPoint point;
+    @Autowired private JwtAuthenticationEntryPoint entryPoint;
     @Autowired private CustomAccessDeniedHandler customAccessDeniedHandler;
     @Autowired private JwtAuthenticationFilter filter;
     @Autowired private RoleAndPermissionHelper roleAndPermissionHelper;
@@ -44,13 +42,14 @@ public class SecurityConfig
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception
     {
-        this.httpSecurity = http;
+        System.out.println("SecurityConfig->securityFilterChain()");
+        httpSecurity = http;
         httpSecurity.csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth->auth
                         .requestMatchers(PUBLIC_URLS).permitAll()
                 );
         httpSecurity.exceptionHandling(exception->exception
-                        .authenticationEntryPoint(point)
+                        .authenticationEntryPoint(entryPoint)
                         .accessDeniedHandler(customAccessDeniedHandler)
                 )
                 .sessionManagement(session->session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
@@ -64,18 +63,17 @@ public class SecurityConfig
             Map<String,String[]> authorityNamesAndUrlsMap = roleAndPermissionHelper.getAuthorityNameAndUrlsMap();
             Set<String> authorityTypes = new HashSet<>();
             Set<String> authorityUrls = new HashSet<>();
-            for(Map.Entry<String,String[]> authorityNamesAndUrls : authorityNamesAndUrlsMap.entrySet())
+            for(Map.Entry<String,String[]> authorityNameAndUrl : authorityNamesAndUrlsMap.entrySet())
             {
-                authorityTypes.add(authorityNamesAndUrls.getKey());
-                authorityUrls.addAll(
-                        Set.of(authorityNamesAndUrls.getValue())
-                );
+                authorityTypes.add(authorityNameAndUrl.getKey());
+                authorityUrls.addAll(Arrays.asList(authorityNameAndUrl.getValue()));
             }
             authorityUrls.add("/api/logout");
             httpSecurity.authorizeHttpRequests(auth->auth
                     .requestMatchers(authorityUrls.toArray(new String[]{}))
                     .hasAnyAuthority(authorityTypes.toArray(new String[]{}))
             );
+            System.out.println("SecurityConfig->updateSecurityConfig()->httpSecurity: "+httpSecurity);
         }catch (Exception e)
         {
             throw new RuntimeException("Error occurred while applying permissions, Reason: "+e.getMessage());

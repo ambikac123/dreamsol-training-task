@@ -11,7 +11,10 @@ import java.util.List;
 public class RoleResponseDto
 {
     private String roleType;
-    private List<String> endPoints;
+
+    private List<String> permissions;
+
     private boolean status;
+
     private LocalDateTime timeStamp;
 }

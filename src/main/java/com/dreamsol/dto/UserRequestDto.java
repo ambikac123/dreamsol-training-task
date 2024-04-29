@@ -47,8 +47,4 @@ public class UserRequestDto
 
 	@Size(min = 1, message = "User role must be defined")
 	private List<RoleRequestDto> roles;
-
-	@Size(min = 1, message = "User permissions must be defined")
-	private List<PermissionRequestDto> permissions;
-
 }

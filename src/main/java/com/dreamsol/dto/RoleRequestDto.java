@@ -18,7 +18,7 @@ public class RoleRequestDto
     private String roleType;
 
     @Size(min = 1, message = "endpoints must not be empty")
-    private List<String> endPoints;
+    private List<String> permissions;
 
     private boolean status;
 }

@@ -37,5 +37,6 @@ public interface UserService
 	User getUser(UserRequestDto userRequestDto, UserType userType, Department department, UserImage userImage);
 	User getUser(long userMobile, String userEmail);
 	UserSingleDataResponseDto userToUserSingleDataResponseDto(User user);
+	User getDemoUser();
 	ResponseEntity<?> downloadDummyData(int noOfRecords);
 }
