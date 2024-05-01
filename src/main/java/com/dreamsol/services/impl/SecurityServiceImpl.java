@@ -1,20 +1,19 @@
 package com.dreamsol.services.impl;
 
 import com.dreamsol.dto.EndpointResponseDto;
-import com.dreamsol.entities.LoginUser;
 import com.dreamsol.entities.Endpoint;
 import com.dreamsol.entities.RefreshToken;
 import com.dreamsol.helpers.EndpointMappingsHelper;
-import com.dreamsol.repositories.LoginUserRepository;
 import com.dreamsol.repositories.EndpointRepository;
-import com.dreamsol.repositories.RefreshTokenRepository;
 import com.dreamsol.response.ApiResponse;
 import com.dreamsol.securities.JwtHelper;
 import com.dreamsol.securities.LoginRequest;
 import com.dreamsol.securities.LoginResponse;
 import com.dreamsol.securities.SecurityConfig;
+import com.dreamsol.securities.UpdateSecurityConfig;
 import com.dreamsol.services.RefreshTokenService;
 import com.dreamsol.services.SecurityService;
+import lombok.AllArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -25,94 +24,53 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.authentication.WebAuthenticationDetails;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 
 @Service
+@AllArgsConstructor(onConstructor_ = {@Autowired})
 public class SecurityServiceImpl implements SecurityService
 {
-    @Autowired private AuthenticationManager authenticationManager;
-    @Autowired private SecurityFilterChain securityFilterChain;
-    @Autowired private UserDetailsService userDetailsService;
-    @Autowired private RefreshTokenService refreshTokenService;
-    @Autowired private EndpointRepository endpointRepository;
-    @Autowired private LoginUserRepository loginUserRepository;
-    @Autowired private RefreshTokenRepository refreshTokenRepository;
-    @Autowired private JwtHelper jwtHelper;
-    @Autowired private SecurityConfig securityConfig;
-    @Autowired private EndpointMappingsHelper endpointMappingsHelper;
-
+    private AuthenticationManager authenticationManager;
+    private JwtHelper jwtHelper;
+    private RefreshTokenService refreshTokenService;
+    private EndpointRepository endpointRepository;
+    private EndpointMappingsHelper endpointMappingsHelper;
+    private UserDetailsService userDetailsService;
+    private SecurityConfig securityConfig;
+    private UpdateSecurityConfig updateSecurityConfig;
     private Authentication authenticateUsernameAndPassword(String username, String password)
     {
-        UsernamePasswordAuthenticationToken usernamePasswordAuthenticationToken = new UsernamePasswordAuthenticationToken(username,password);
+        UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(username,password);
         try{
-            return authenticationManager.authenticate(usernamePasswordAuthenticationToken);
+            return authenticationManager.authenticate(authentication);
         }catch (BadCredentialsException e)
         {
-            throw new BadCredentialsException("Invalid username or password !");
+            throw new BadCredentialsException(" Invalid username or password !");
         }
     }
     @Override
     public ResponseEntity<?> login(LoginRequest request)
     {
-        try{
-            LoginUser loginUser = getLoginUser();
+        try {
+            SecurityContextHolder.clearContext();
             Authentication authentication = authenticateUsernameAndPassword(request.getUsername(), request.getPassword());
             SecurityContextHolder.getContext().setAuthentication(authentication);
-            loginUser.setUsername(request.getUsername());
-            loginUser.setLoginAt(LocalDateTime.now());
-            loginUserRepository.save(loginUser);
             UserDetails userDetails = (UserDetails) authentication.getPrincipal();
-            UserDetailsImpl userDetailsImpl = (UserDetailsImpl) userDetails;
-            userDetailsImpl.setIpAddress(loginUser.getIpAddress());
-            String token = jwtHelper.generateToken(userDetails);
+            String accessToken = jwtHelper.generateToken(userDetails);
             RefreshToken refreshToken = refreshTokenService.createRefreshToken(userDetails.getUsername());
-            securityConfig.updateSecurityConfig();
-            LoginResponse response = LoginResponse.builder()
-                .accessToken(token)
-                .refreshToken(refreshToken.getRefreshToken())
-                .build();
-            return ResponseEntity.status(HttpStatus.OK).body(response);
-        }catch (Exception e)
-        {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ApiResponse("Login Failed! Reason: "+e.getMessage(),false));
+            updateSecurityConfig.updateSecurityConfig();
+            LoginResponse loginResponse = LoginResponse.builder()
+                    .accessToken(accessToken)
+                    .refreshToken(refreshToken.getRefreshToken())
+                    .build();
+            return ResponseEntity.status(HttpStatus.CREATED).body(loginResponse);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ApiResponse("Login Error: " + e.getMessage(), false));
         }
     }
-    private LoginUser getLoginUser()
-    {
-        WebAuthenticationDetails webAuthenticationDetails = (WebAuthenticationDetails) SecurityContextHolder.getContext().getAuthentication().getDetails();
-        String clientIP = webAuthenticationDetails.getRemoteAddress();
-        LoginUser loginUser = new LoginUser();
-        loginUser.setIpAddress(clientIP);
-        return loginUser;
-    }
-    /*@Override
-    public ResponseEntity<?> logout()
-    {
-        try
-        {
-            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-            UserDetails userDetails = (UserDetails) authentication.getPrincipal();
-            LoginUser loginUser = loginUserRepository.findByUsername(userDetails.getUsername());
-            if(loginUser!=null)
-            {
-                RefreshToken refreshToken = refreshTokenRepository.findByLoginUser(loginUser);
-                refreshTokenRepository.delete(refreshToken);
-                loginUserRepository.delete(loginUser);
-                SecurityContextHolder.clearContext();
-                return ResponseEntity.status(HttpStatus.OK).body(new ApiResponse("You have logged out successfully", true));
-            }
-            return ResponseEntity.status(HttpStatus.OK).body(new ApiResponse("You have already logged out!", false));
-        }catch (Exception e)
-        {
-            return ResponseEntity.status(HttpStatus.OK).body(new ApiResponse(e.getMessage(), false));
-        }
-    }*/
 
     @Override
     public ResponseEntity<?> getAllEndpoints()

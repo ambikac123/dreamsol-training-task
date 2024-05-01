@@ -1,5 +1,85 @@
 package com.dreamsol.securities;
 
+import com.dreamsol.exceptions.InvalidTokenException;
+import io.jsonwebtoken.ExpiredJwtException;
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import lombok.AllArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
+import org.springframework.stereotype.Component;
+import org.springframework.web.filter.OncePerRequestFilter;
+
+import java.io.IOException;
+import java.util.List;
+
+@Component
+public class JwtAuthenticationFilter extends OncePerRequestFilter
+{
+    @Autowired private JwtHelper jwtHelper;
+    @Autowired private UserDetailsService userDetailsService;
+    private final String[] PUBLIC_URLS = {
+            "/swagger-ui/index.html",
+            "/swagger-ui/swagger-ui.css",
+            "/swagger-ui/index.css",
+            "/swagger-ui/swagger-ui-bundle.js",
+            "/swagger-ui/swagger-initializer.js",
+            "/swagger-ui/swagger-ui-standalone-preset.js",
+            "/v3/api-docs/swagger-config",
+            "/swagger-ui/favicon-32x32.png",
+            "/v3/api-docs",
+            "/api/login",
+            "/api/re-generate-token",
+            "/api/update-endpoints",
+            "/api/get-endpoints"
+    };
+    List<String> publicUrls = List.of(PUBLIC_URLS);
+    @Override
+    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException
+    {
+        if(!publicUrls.contains(request.getRequestURI()))
+        {
+            String requestToken = request.getHeader("Authorization");
+            String username = null;
+            String actualToken = null;
+            if(requestToken!=null && requestToken.startsWith("Bearer"))
+            {
+                actualToken = requestToken.substring(7);
+                try{
+                    username = jwtHelper.getUsernameFromToken(actualToken);
+                }catch(ExpiredJwtException e)
+                {
+                    throw new RuntimeException(e.getMessage());
+                }
+                if(username!=null && SecurityContextHolder.getContext().getAuthentication()==null)
+                {
+                    UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+                    if(jwtHelper.validateToken(actualToken,userDetails))
+                    {
+                        UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(userDetails,null,userDetails.getAuthorities());
+                        authenticationToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                        SecurityContextHolder.getContext().setAuthentication(authenticationToken);
+                    }
+                    else{
+                        response.sendError(403,"Invalid token!");
+                    }
+                }
+            }else{
+                response.sendError(403,"Token is in incorrect format. missing prefix 'Bearer'");
+            }
+        }
+        filterChain.doFilter(request,response);
+    }
+}
+
+
+/*
 import com.dreamsol.entities.LoginUser;
 import com.dreamsol.repositories.LoginUserRepository;
 import io.jsonwebtoken.ExpiredJwtException;
@@ -40,7 +120,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     @Autowired private JwtHelper jwtHelper;
     @Autowired private UserDetailsService userDetailsService;
     @Autowired private LoginUserRepository loginUserRepository;
-    @Autowired private JwtAuthenticationEntryPoint entryPoint;
+    @Autowired private AuthenticationEntryPointImpl entryPoint;
     private final String[] PUBLIC_URLS = {
             "/swagger-ui/index.html",
             "/swagger-ui/swagger-ui.css",
@@ -63,21 +143,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         String requestURI = request.getRequestURI();
         if(publicUrls.indexOf(requestURI)!=-1)
         {
-            if(requestURI.equals(LOGIN_URI))
-            {
-                if(canLogin(request, response))
-                {
-                    ;
-                }else{
-                    sendError(response,"Login Failed: The requested client machine is already in use i.e. A user already logged in with this machine.",HttpStatus.FORBIDDEN);
-                    return;
-                }
-            }
-            else{
-                AnonymousAuthenticationToken authentication = new AnonymousAuthenticationToken("anonymous", request.getRemoteAddr(), Arrays.asList(new SimpleGrantedAuthority("ROLE_ANONYMOUS")));
-                authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-                SecurityContextHolder.getContext().setAuthentication(authentication);
-            }
+            AnonymousAuthenticationToken authenticationToken = new AnonymousAuthenticationToken(requestURI,requestURI,List.of(new SimpleGrantedAuthority("AnonymousUser")));
+            authenticationToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+            SecurityContextHolder.getContext().setAuthentication(authenticationToken);
         }
         else {
             String tokenHeader = request.getHeader(AUTH_HEADER);
@@ -88,54 +156,25 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
             String actualToken = tokenHeader.substring(TOKEN_PREFIX.length()).trim();
             try {
-                String usernameFromToken = jwtHelper.getUsernameFromToken(actualToken);
+               String usernameFromToken = jwtHelper.getUsernameFromToken(actualToken);
                 if (usernameFromToken != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-                    LoginUser loginUser = loginUserRepository.findByUsername(usernameFromToken);
-                    if(loginUser==null)
+                    UserDetails userDetails = userDetailsService.loadUserByUsername(usernameFromToken);
+                    if(jwtHelper.validateToken(actualToken,userDetails))
                     {
-                        sendError(response,"You are already logged out. Please! login again to access this resource!",HttpStatus.BAD_REQUEST);
-                        return;
-                    }
-                    String tokenIP = jwtHelper.getClaimFromToken(actualToken, (claims -> claims.get("IP"))).toString();
-                    if (tokenIP.equals(request.getRemoteAddr())) {
-                        UserDetails userDetails = userDetailsService.loadUserByUsername(usernameFromToken);
                         UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
                         authenticationToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                         SecurityContextHolder.getContext().setAuthentication(authenticationToken);
-
-                    } else {
-                        sendError(response, "Requested token and requested user not matched!", HttpStatus.FORBIDDEN);
-                        return;
-                    }
+                     }
                 }
+
             } catch (ExpiredJwtException | MalformedJwtException | SignatureException | IllegalArgumentException e) {
                 sendError(response, e.getMessage(), HttpStatus.FORBIDDEN);
                 return;
             }
         }
-
         filterChain.doFilter(request, response);
     }
-
-    private boolean canLogin(HttpServletRequest request, HttpServletResponse response) throws IOException
-    {
-        String clientIP = request.getRemoteAddr();
-        LoginUser loginUser = loginUserRepository.findByIpAddress(clientIP);
-        if (loginUser != null)
-        {
-            return false;
-        } else {
-            AnonymousAuthenticationToken authentication = new AnonymousAuthenticationToken("anonymous", request.getRemoteAddr(), Arrays.asList(new SimpleGrantedAuthority("ROLE_ANONYMOUS")));
-            authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-            SecurityContextHolder.getContext().setAuthentication(authentication);
-            return true;
-        }
-    }
-
     private void sendError(HttpServletResponse response, String message, HttpStatus status) throws IOException {
-        PrintWriter printWriter = response.getWriter();
-        response.setStatus(status.value());
-        printWriter.println(message);
-        printWriter.flush();
+        response.sendError(status.value(),message);
     }
-}
+}*/

@@ -10,7 +10,6 @@ import com.dreamsol.securities.JwtHelper;
 import com.dreamsol.securities.LoginResponse;
 import com.dreamsol.securities.SecurityConfig;
 import com.dreamsol.services.RefreshTokenService;
-import com.dreamsol.services.SecurityService;
 import com.dreamsol.services.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -29,7 +28,6 @@ import java.util.UUID;
 @Service
 public class RefreshTokenServiceImpl implements RefreshTokenService
 {
-    @Autowired private SecurityService securityService;
     @Autowired private UserService userService;
     @Autowired private UserDetailsService userDetailsService;
     @Autowired private RefreshTokenRepository refreshTokenRepository;
@@ -91,11 +89,10 @@ public class RefreshTokenServiceImpl implements RefreshTokenService
 
                 UserDetails userDetails = userDetailsService.loadUserByUsername(loginUser.getUsername());
                 UserDetailsImpl userDetailsImpl = (UserDetailsImpl) userDetails;
-                userDetailsImpl.setIpAddress(clientIP);
                 UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(userDetails,null,userDetails.getAuthorities());
                 SecurityContextHolder.getContext().setAuthentication(authenticationToken);
                 String newToken = jwtHelper.generateToken(userDetailsImpl);
-                securityConfig.updateSecurityConfig();
+                //securityConfig.updateSecurityConfig(authenticationToken);
                 LoginResponse loginResponse = LoginResponse.builder()
                         .accessToken(newToken)
                         .refreshToken(refreshToken)

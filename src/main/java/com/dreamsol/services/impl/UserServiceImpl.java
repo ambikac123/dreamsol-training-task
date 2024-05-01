@@ -548,26 +548,4 @@ public class UserServiceImpl implements UserService
             throw new RuntimeException("Error occurred while varifying user roles, Reason: "+e.getMessage());
         }
     }
-    public User getDemoUser()
-    {
-        try {
-            User user = new User();
-            user.setUserEmail("demo");
-            user.setUserPassword(passwordEncoder.encode("demo"));
-            user.setStatus(true);
-            Role role = new Role();
-            role.setRoleType("DEMO");
-            Permission permission = new Permission();
-            permission.setPermissionType("ALL");
-            Endpoint endpoint = new Endpoint("ACCESS_ALL", "/api/**");
-            permission.setEndPoints(List.of(endpoint));
-            role.setPermissions(List.of(permission));
-            role.setStatus(true);
-            user.setRoles(List.of(role));
-            return user;
-        }catch(Exception e)
-        {
-            throw new RuntimeException(e.getMessage());
-        }
-    }
 }

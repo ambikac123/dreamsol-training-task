@@ -29,11 +29,6 @@ public class RoleAndPermissionHelper
         for(GrantedAuthority authority : authorities)
         {
             String roleType = authority.getAuthority();
-            if(roleType.equals("DEMO"))
-            {
-                authorityNameAndUrlsMap.put("DEMO",new String[]{"/api/**"});
-                break;
-            }
             List<String> endpoints = new ArrayList<>();
             List<Permission> permissionList = getPermissionList(roleType);
             for (Permission permission : permissionList)
@@ -47,7 +42,6 @@ public class RoleAndPermissionHelper
             }
             authorityNameAndUrlsMap.put(roleType,endpoints.toArray(new String[]{}));
         }
-        System.out.println("Role and permission helper , getAuthorityNameAndUrls"+authorityNameAndUrlsMap);
         return authorityNameAndUrlsMap;
     }
     private List<Permission> getPermissionList(String roleType)

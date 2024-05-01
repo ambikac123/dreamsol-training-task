@@ -1,6 +1,5 @@
 package com.dreamsol.securities;
 
-import com.dreamsol.entities.Permission;
 import com.dreamsol.entities.Role;
 import com.dreamsol.entities.User;
 import com.dreamsol.services.impl.UserDetailsImpl;
@@ -31,13 +30,11 @@ public class JwtHelper
         Map<String, Object> claims = new HashMap<>();
         UserDetailsImpl userDetailsImpl = (UserDetailsImpl)userDetails;
         User user = userDetailsImpl.getUser();
-        String ipAddress = userDetailsImpl.getIpAddress();
         claims.put("Id",user.getUserId());
         claims.put("Name",user.getUserName());
         claims.put("Email",user.getUserEmail());
         claims.put("Mobile No.",user.getUserMobile());
         claims.put("Roles", List.of(user.getRoles().stream().map(Role::getRoleType).toArray()));
-        claims.put("IP",ipAddress);
         String subject = userDetails.getUsername();
         return doGenerateToken(claims, subject);
     }
