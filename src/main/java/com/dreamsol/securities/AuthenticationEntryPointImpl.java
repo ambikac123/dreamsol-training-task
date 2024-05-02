@@ -17,7 +17,7 @@ public class AuthenticationEntryPointImpl implements AuthenticationEntryPoint
     {
         response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
         PrintWriter writer = response.getWriter();
-        writer.println("Authentication Failed! "+e.getMessage());
+        writer.println("Authentication Failed! You are not authenticated to access this resource.");
     }
 
 }

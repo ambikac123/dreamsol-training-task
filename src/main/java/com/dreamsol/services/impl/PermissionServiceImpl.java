@@ -12,6 +12,7 @@ import com.dreamsol.services.PermissionService;
 import lombok.AllArgsConstructor;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataAccessException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -72,9 +73,9 @@ public class PermissionServiceImpl implements PermissionService
             permission.setTimeStamp(LocalDateTime.now());
             permissionRepository.save(permission);
             return ResponseEntity.status(HttpStatus.OK).body(new ApiResponse("permission updated successfully!",true));
-        }catch(Exception e)
+        }catch(DataAccessException e)
         {
-            throw new RuntimeException("Permission with id: "+permissionId+" not updated, Reason: "+e.getMessage());
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(new ApiResponse("Permission with id: "+permissionId+" not updated, Reason: "+e.getMessage(),false));
         }
     }
 
@@ -85,9 +86,9 @@ public class PermissionServiceImpl implements PermissionService
             Permission permission = permissionRepository.findById(permissionId).orElseThrow(()->new ResourceNotFoundException("Permission","permissionId",permissionId));
             permissionRepository.delete(permission);
             return ResponseEntity.status(HttpStatus.OK).body(new ApiResponse("permission with id: "+permissionId+" deleted successfully",true));
-        }catch(Exception e)
+        }catch(DataAccessException e)
         {
-            throw new RuntimeException("Permission with id: "+permissionId+" not deleted, Reason: "+e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Permission with id: "+permissionId+" not deleted, Reason: "+e.getMessage());
         }
     }
 
@@ -113,27 +114,24 @@ public class PermissionServiceImpl implements PermissionService
         {
             List<Permission> permissionList = permissionRepository.findAll();
             if(permissionList.isEmpty())
-                return ResponseEntity.status(HttpStatus.OK).body(new ApiResponse("No contents available!",true));
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ApiResponse("No contents available!",true));
             List<PermissionResponseDto> permissionResponseDtoList = permissionList.stream()
                     .map(this::permissionToPermissionResponseDto).toList();
             return ResponseEntity.status(HttpStatus.OK).body(permissionResponseDtoList);
-        }catch(Exception e)
+        }catch(DataAccessException e)
         {
-            throw new RuntimeException("Request not processed, Reason: "+e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Request not processed, Reason: "+e.getMessage());
         }
     }
     public Permission permissionRequestDtoToPermission(PermissionRequestDto permissionRequestDto)
     {
-        try
-        {
-            Permission permission = permissionRepository.findByPermissionType(permissionRequestDto.getPermissionType());
-            if (!Objects.isNull(permission))
-                return permission;
+        Permission permission = permissionRepository.findByPermissionType(permissionRequestDto.getPermissionType());
+        if (permission != null) {
+            return permission;
+        } else {
             throw new ResourceNotFoundException("Permission", "permissionName:" + permissionRequestDto.getPermissionType(), 0);
-        }catch(Exception e)
-        {
-            throw new RuntimeException("Error occurred while verifying permission, Reason: "+e.getMessage());
         }
+
     }
     public PermissionResponseDto permissionToPermissionResponseDto(Permission permission)
     {

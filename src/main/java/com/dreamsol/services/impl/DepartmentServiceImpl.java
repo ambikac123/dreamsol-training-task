@@ -23,6 +23,7 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.core.io.Resource;
+import org.springframework.dao.DataAccessException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -98,11 +99,10 @@ public class DepartmentServiceImpl implements DepartmentService
 				user.setDepartment(null);
 			}
 			department.setStatus(false);
-			//departmentRepository.delete(department);
 			return ResponseEntity.status(HttpStatus.OK).body(new ApiResponse("department with id "+departmentId+" deleted successfully!", true));
-		}catch(Exception e)
+		}catch(NullPointerException e)
 		{
-			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ApiResponse("Error occurred while deleting department : "+e.getMessage(),false));
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ApiResponse("Error occurred while deleting department : "+e.getMessage(),false));
 		}
 	}
 	public ResponseEntity<DepartmentResponseDto> getSingleDepartment(Long departmentId)

@@ -9,8 +9,6 @@ import com.dreamsol.response.ApiResponse;
 import com.dreamsol.securities.JwtHelper;
 import com.dreamsol.securities.LoginRequest;
 import com.dreamsol.securities.LoginResponse;
-import com.dreamsol.securities.SecurityConfig;
-import com.dreamsol.securities.UpdateSecurityConfig;
 import com.dreamsol.services.RefreshTokenService;
 import com.dreamsol.services.SecurityService;
 import lombok.AllArgsConstructor;
@@ -23,7 +21,6 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -38,9 +35,6 @@ public class SecurityServiceImpl implements SecurityService
     private RefreshTokenService refreshTokenService;
     private EndpointRepository endpointRepository;
     private EndpointMappingsHelper endpointMappingsHelper;
-    private UserDetailsService userDetailsService;
-    private SecurityConfig securityConfig;
-    private UpdateSecurityConfig updateSecurityConfig;
     private Authentication authenticateUsernameAndPassword(String username, String password)
     {
         UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(username,password);
@@ -61,7 +55,6 @@ public class SecurityServiceImpl implements SecurityService
             UserDetails userDetails = (UserDetails) authentication.getPrincipal();
             String accessToken = jwtHelper.generateToken(userDetails);
             RefreshToken refreshToken = refreshTokenService.createRefreshToken(userDetails.getUsername());
-            updateSecurityConfig.updateSecurityConfig();
             LoginResponse loginResponse = LoginResponse.builder()
                     .accessToken(accessToken)
                     .refreshToken(refreshToken.getRefreshToken())
