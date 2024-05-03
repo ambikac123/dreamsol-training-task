@@ -19,8 +19,6 @@ import com.dreamsol.dto.UserSingleDataResponseDto;
 import com.dreamsol.dto.UserTypeSingleDataResponseDto;
 import com.dreamsol.entities.Department;
 import com.dreamsol.entities.Document;
-import com.dreamsol.entities.Endpoint;
-import com.dreamsol.entities.Permission;
 import com.dreamsol.entities.Role;
 import com.dreamsol.entities.User;
 import com.dreamsol.entities.UserImage;
@@ -32,7 +30,6 @@ import com.dreamsol.helpers.ImageHelper;
 import com.dreamsol.helpers.PageInfo;
 import com.dreamsol.repositories.DepartmentRepository;
 import com.dreamsol.repositories.DocumentRepository;
-import com.dreamsol.repositories.LoginUserRepository;
 import com.dreamsol.repositories.PermissionRepository;
 import com.dreamsol.repositories.RoleRepository;
 import com.dreamsol.repositories.UserImageRepository;
@@ -88,7 +85,6 @@ public class UserServiceImpl implements UserService
     private UserImageRepository userImageRepository;
     private RoleRepository roleRepository;
     private PermissionRepository permissionRepository;
-    private LoginUserRepository loginUserRepository;
     private DocumentService documentService;
     private DepartmentService departmentService;
     private UserTypeService userTypeService;
@@ -220,12 +216,6 @@ public class UserServiceImpl implements UserService
 	}
     public ResponseEntity<?> getSingleUser(Long userId)
     {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        UserDetailsImpl userDetailsImpl =(UserDetailsImpl) authentication.getPrincipal();
-        if(loginUserRepository.findByUsername(userDetailsImpl.getUsername()) == null && userDetailsImpl.getUser().getUserId() != userId)
-        {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ApiResponse("Can't be accessed!",false));
-        }
         User user = getUser(userId);
         if(Objects.isNull(user))
             throw new ResourceNotFoundException("user","userId",userId);

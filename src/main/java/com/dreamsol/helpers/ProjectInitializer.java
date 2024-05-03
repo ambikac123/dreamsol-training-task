@@ -63,6 +63,8 @@ public class ProjectInitializer
                 permission = new Permission();
                 permission.setPermissionType("ALL");
                 permission.setEndPoints(List.of(endpoint));
+                permission.setTimeStamp(LocalDateTime.now());
+                permission.setStatus(true);
             }
             permissionRepository.save(permission);
             Role role = roleRepository.findByRoleType("DEMO");
@@ -70,6 +72,7 @@ public class ProjectInitializer
                 role = new Role();
                 role.setRoleType("DEMO");
                 role.setPermissions(List.of(permission));
+                role.setTimeStamp(LocalDateTime.now());
                 role.setStatus(true);
             }
             roleRepository.save(role);

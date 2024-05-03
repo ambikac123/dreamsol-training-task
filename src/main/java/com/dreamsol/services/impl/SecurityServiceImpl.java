@@ -54,7 +54,7 @@ public class SecurityServiceImpl implements SecurityService
             SecurityContextHolder.getContext().setAuthentication(authentication);
             UserDetails userDetails = (UserDetails) authentication.getPrincipal();
             String accessToken = jwtHelper.generateToken(userDetails);
-            RefreshToken refreshToken = refreshTokenService.createRefreshToken(userDetails.getUsername());
+            RefreshToken refreshToken = refreshTokenService.createRefreshToken(userDetails);
             LoginResponse loginResponse = LoginResponse.builder()
                     .accessToken(accessToken)
                     .refreshToken(refreshToken.getRefreshToken())
