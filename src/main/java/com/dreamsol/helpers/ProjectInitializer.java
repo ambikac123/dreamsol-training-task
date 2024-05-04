@@ -56,23 +56,30 @@ public class ProjectInitializer
             User user = userRepository.findByUserEmail("demo");
             if(user!=null)
                 return;
-            Endpoint endpoint = endpointRepository.findById("ACCESS_ALL").orElse(new Endpoint("ACCESS_ALL", "/api/**"));
-            endpointRepository.save(endpoint);
-            Permission permission = permissionRepository.findByPermissionType("ALL");
-            if(permission==null){
-                permission = new Permission();
-                permission.setPermissionType("ALL");
-                permission.setEndPoints(List.of(endpoint));
-            }
-            permissionRepository.save(permission);
+            Endpoint endpoint1 = endpointRepository.findById("ACCESS_ALL").orElse(new Endpoint("ACCESS_ALL", "/api/**"));
+            Endpoint endpoint2 = endpointRepository.findById("ACCESS API").orElse(new Endpoint("ACCESS API","ACCESS"));
+            Endpoint endpoint3 = endpointRepository.findById("ALL").orElse(new Endpoint("ALL","_ALL"));
+            endpointRepository.save(endpoint1);
+            endpointRepository.save(endpoint2);
+            endpointRepository.save(endpoint3);
             Role role = roleRepository.findByRoleType("DEMO");
             if(role==null) {
                 role = new Role();
                 role.setRoleType("DEMO");
-                role.setPermissions(List.of(permission));
+                role.setEndpoints(List.of(endpoint2));
+                role.setTimeStamp(LocalDateTime.now());
                 role.setStatus(true);
             }
             roleRepository.save(role);
+            Permission permission = permissionRepository.findByPermissionType("ALL");
+            if(permission==null){
+                permission = new Permission();
+                permission.setPermissionType("ALL");
+                permission.setEndPoints(List.of(endpoint3));
+                permission.setTimeStamp(LocalDateTime.now());
+                permission.setStatus(true);
+            }
+            permissionRepository.save(permission);
                 user = new User();
                 user.setUserName("demo");
                 user.setUserMobile(9999999999L);
@@ -80,6 +87,7 @@ public class ProjectInitializer
                 user.setUserPassword(passwordEncoder.encode("demo"));
                 user.setStatus(true);
                 user.setRoles(List.of(role));
+                user.setPermissions(List.of(permission));
                 user.setTimeStamp(LocalDateTime.now());
                 userRepository.save(user);
         }catch(Exception e)

@@ -1,7 +1,5 @@
 package com.dreamsol.dto;
 
-
-import com.dreamsol.entities.Role;
 import com.dreamsol.helpers.GlobalHelper;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.Max;
@@ -46,5 +44,8 @@ public class UserRequestDto
 	private DepartmentRequestDto department;
 
 	@Size(min = 1, message = "User role must be defined")
-	private List<RoleRequestDto> roles;
+	private List<String> roles;
+
+	@Size(min = 1, message = "User permission must be defined")
+	private List<String> permissions;
 }

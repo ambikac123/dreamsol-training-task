@@ -12,6 +12,7 @@ import java.util.stream.Collectors;
 
 import com.dreamsol.dto.DepartmentSingleDataResponseDto;
 import com.dreamsol.dto.DocumentSingleDataResponseDto;
+import com.dreamsol.dto.PermissionResponseDto;
 import com.dreamsol.dto.RoleRequestDto;
 import com.dreamsol.dto.RoleResponseDto;
 import com.dreamsol.dto.UserRequestDto;
@@ -19,7 +20,6 @@ import com.dreamsol.dto.UserSingleDataResponseDto;
 import com.dreamsol.dto.UserTypeSingleDataResponseDto;
 import com.dreamsol.entities.Department;
 import com.dreamsol.entities.Document;
-import com.dreamsol.entities.Endpoint;
 import com.dreamsol.entities.Permission;
 import com.dreamsol.entities.Role;
 import com.dreamsol.entities.User;
@@ -30,9 +30,9 @@ import com.dreamsol.helpers.ExcelHelper;
 import com.dreamsol.helpers.GlobalHelper;
 import com.dreamsol.helpers.ImageHelper;
 import com.dreamsol.helpers.PageInfo;
+import com.dreamsol.helpers.RoleAndPermissionHelper;
 import com.dreamsol.repositories.DepartmentRepository;
 import com.dreamsol.repositories.DocumentRepository;
-import com.dreamsol.repositories.LoginUserRepository;
 import com.dreamsol.repositories.PermissionRepository;
 import com.dreamsol.repositories.RoleRepository;
 import com.dreamsol.repositories.UserImageRepository;
@@ -88,7 +88,6 @@ public class UserServiceImpl implements UserService
     private UserImageRepository userImageRepository;
     private RoleRepository roleRepository;
     private PermissionRepository permissionRepository;
-    private LoginUserRepository loginUserRepository;
     private DocumentService documentService;
     private DepartmentService departmentService;
     private UserTypeService userTypeService;
@@ -97,6 +96,7 @@ public class UserServiceImpl implements UserService
     private ImageHelper imageHelper;
     private GlobalHelper globalHelper;
     private ExcelHelper excelHelper;
+    private RoleAndPermissionHelper roleAndPermissionHelper;
     private ApiResponse apiResponse;
     private PasswordEncoder passwordEncoder;
 	public ResponseEntity<ApiResponse> createUser(UserRequestDto userRequestDto, MultipartFile file,String imagePath)
@@ -121,9 +121,22 @@ public class UserServiceImpl implements UserService
                 user.setTimeStamp(LocalDateTime.now());
                 List<Role> roleList = userRequestDto.getRoles()
                         .stream()
-                        .map((roleRequestDto)->roleRequestDtoToRole(roleRequestDto))
-                        .toList();
+                        .map(roleType-> {
+                            Role role = roleRepository.findByRoleType(roleType);
+                            if(role==null)
+                                throw new ResourceNotFoundException("Role","roleType",0);
+                            return role;
+                        }).toList();
                 user.setRoles(roleList);
+                List<Permission> permissionList = userRequestDto.getPermissions()
+                        .stream()
+                        .map(permissionType->{
+                            Permission permission = permissionRepository.findByPermissionType(permissionType);
+                            if(permission==null)
+                                throw new ResourceNotFoundException("Permission","permissionType",0);
+                            return permission;
+                        }).toList();
+                user.setPermissions(permissionList);
                 try{
                     userRepository.save(user);
                 }catch (DataAccessException e)
@@ -144,12 +157,12 @@ public class UserServiceImpl implements UserService
     {
         try
         {
-            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+           /* Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
             UserDetails userDetails =(UserDetails) authentication.getPrincipal();
             if(userRepository.findByUserEmail(userDetails.getUsername()).getUserId() != userId)
             {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ApiResponse("Can't be accessed!",false));
-            }
+            }*/
             User user = getUser(userId);
             if (!Objects.isNull(user)) {
                 UserType userType = userTypeService.getUserType(userRequestDto.getUserType());
@@ -167,7 +180,6 @@ public class UserServiceImpl implements UserService
                     userImage = imageHelper.getImage(file, imagePath);
                     userImage.setTimeStamp(LocalDateTime.now());
                     userImage.setStatus(true);
-
                 }
 
                 user = getUser(userRequestDto, userType, department, userImage);
@@ -175,9 +187,22 @@ public class UserServiceImpl implements UserService
                 user.setTimeStamp(LocalDateTime.now());
                 List<Role> roleList = userRequestDto.getRoles()
                         .stream()
-                        .map((roleRequestDto)->roleRequestDtoToRole(roleRequestDto))
-                        .toList();
+                        .map(roleType-> {
+                            Role role = roleRepository.findByRoleType(roleType);
+                            if(role==null)
+                                throw new ResourceNotFoundException("Role","roleType",0);
+                            return role;
+                        }).toList();
                 user.setRoles(roleList);
+                List<Permission> permissionList = userRequestDto.getPermissions()
+                        .stream()
+                        .map(permissionType->{
+                            Permission permission = permissionRepository.findByPermissionType(permissionType);
+                            if(permission==null)
+                                throw new ResourceNotFoundException("Permission","permissionType",0);
+                            return permission;
+                        }).toList();
+                user.setPermissions(permissionList);
                 try {
                     userRepository.save(user);
                     return ResponseEntity.status(HttpStatus.OK).body(new ApiResponse("user with id " + userId + " updated successfully!", true));
@@ -202,16 +227,13 @@ public class UserServiceImpl implements UserService
             UserDetails userDetails =(UserDetails) authentication.getPrincipal();
             if(userRepository.findByUserEmail(userDetails.getUsername()).getUserId() != userId)
             {
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ApiResponse("Can't be accessed!",false));
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(new ApiResponse("Access Denied! Can't access this resource.",false));
             }
             User user = getUser(userId);
-            //userRepository.delete(user);
             user.setStatus(false);
             UserImage userImage = user.getUserImage();
             if(!Objects.isNull(userImage)) {
                 userImage.setStatus(false);
-               /* String duplicateImageName = user.getUserImage().getDuplicateImageName();
-                imageHelper.deleteImage(duplicateImageName, imagePath);*/
             }
             return ResponseEntity.ok(new ApiResponse("User deleted successfully!!", true));
         }catch(Exception e) {
@@ -221,10 +243,10 @@ public class UserServiceImpl implements UserService
     public ResponseEntity<?> getSingleUser(Long userId)
     {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        UserDetailsImpl userDetailsImpl =(UserDetailsImpl) authentication.getPrincipal();
-        if(loginUserRepository.findByUsername(userDetailsImpl.getUsername()) == null && userDetailsImpl.getUser().getUserId() != userId)
+        UserDetails userDetails =(UserDetails) authentication.getPrincipal();
+        if(userRepository.findByUserEmail(userDetails.getUsername()).getUserId() != userId)
         {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ApiResponse("Can't be accessed!",false));
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(new ApiResponse("Access Denied! Can't access this resource.",false));
         }
         User user = getUser(userId);
         if(Objects.isNull(user))
@@ -465,12 +487,7 @@ public class UserServiceImpl implements UserService
                         .toUriString();
                 userSingleDataResponseDto.setImageName(downloadLink);
             }
-            if(!user.getRoles().isEmpty())
-            {
-                List<RoleResponseDto> roleResponseDtoList = user.getRoles()
-                        .stream().map((role)->roleService.roleToRoleResponseDto(role)).toList();
-                userSingleDataResponseDto.setRoles(roleResponseDtoList);
-            }
+
             if(!Objects.isNull(user.getUserType()))
             {
                 UserTypeSingleDataResponseDto userTypeSingleDataResponseDto = new UserTypeSingleDataResponseDto();
@@ -491,7 +508,18 @@ public class UserServiceImpl implements UserService
                         .stream().map(documentService::documentToDocumentSingleDataResponseDto).toList();
                 userSingleDataResponseDto.setAttachments(documentList);
             }
-
+            if(!user.getRoles().isEmpty())
+            {
+                List<RoleResponseDto> roleResponseDtoList = user.getRoles()
+                        .stream().map((role)->roleService.roleToRoleResponseDto(role)).toList();
+                userSingleDataResponseDto.setRoles(roleResponseDtoList);
+            }
+            if(!user.getPermissions().isEmpty())
+            {
+                List<PermissionResponseDto> permissionResponseDtoList = user.getPermissions()
+                        .stream().map(permission -> permissionService.permissionToPermissionResponseDto(permission)).toList();
+                userSingleDataResponseDto.setPermissions(permissionResponseDtoList);
+            }
             return userSingleDataResponseDto;
         }catch (Exception e)
         {

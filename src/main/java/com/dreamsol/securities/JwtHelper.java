@@ -1,5 +1,6 @@
 package com.dreamsol.securities;
 
+import com.dreamsol.entities.Permission;
 import com.dreamsol.entities.Role;
 import com.dreamsol.entities.User;
 import com.dreamsol.services.impl.UserDetailsImpl;
@@ -35,6 +36,7 @@ public class JwtHelper
         claims.put("Email",user.getUserEmail());
         claims.put("Mobile No.",user.getUserMobile());
         claims.put("Roles", List.of(user.getRoles().stream().map(Role::getRoleType).toArray()));
+        claims.put("Permissions",List.of(user.getPermissions().stream().map(Permission::getPermissionType).toArray()));
         String subject = userDetails.getUsername();
         return doGenerateToken(claims, subject);
     }

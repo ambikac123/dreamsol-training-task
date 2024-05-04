@@ -1,12 +1,9 @@
 package com.dreamsol.threads;
 
-import com.dreamsol.dto.DepartmentRequestDto;
 import com.dreamsol.entities.Department;
 import com.dreamsol.repositories.DepartmentRepository;
-import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Component;
 
-import java.util.ArrayList;
 import java.util.List;
 
 @Component
@@ -30,6 +27,5 @@ public class DepartmentDataSaveThread extends Thread
                 continue;
             }
         }
-
     }
 }

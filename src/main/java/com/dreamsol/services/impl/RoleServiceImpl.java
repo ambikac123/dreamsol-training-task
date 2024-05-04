@@ -2,10 +2,10 @@ package com.dreamsol.services.impl;
 
 import com.dreamsol.dto.RoleRequestDto;
 import com.dreamsol.dto.RoleResponseDto;
-import com.dreamsol.entities.Permission;
+import com.dreamsol.entities.Endpoint;
 import com.dreamsol.entities.Role;
 import com.dreamsol.exceptions.ResourceNotFoundException;
-import com.dreamsol.repositories.PermissionRepository;
+import com.dreamsol.repositories.EndpointRepository;
 import com.dreamsol.repositories.RoleRepository;
 import com.dreamsol.response.ApiResponse;
 import com.dreamsol.services.RoleService;
@@ -25,7 +25,7 @@ import java.util.Objects;
 public class RoleServiceImpl implements RoleService
 {
     private RoleRepository roleRepository;
-    private PermissionRepository permissionRepository;
+    private EndpointRepository endpointRepository;
 
     @Override
     public ResponseEntity<?> createNewRole(RoleRequestDto roleRequestDto) {
@@ -35,10 +35,10 @@ public class RoleServiceImpl implements RoleService
             {
                 role = new Role();
                 BeanUtils.copyProperties(roleRequestDto, role);
-                role.setPermissions(
-                        roleRequestDto.getPermissions()
+                role.setEndpoints(
+                        roleRequestDto.getEndpoints()
                                 .stream()
-                                .map((permissionType)->permissionRepository.findByPermissionType(permissionType))
+                                .map((endPointKey)-> endpointRepository.findById(endPointKey).orElseThrow(()->new ResourceNotFoundException("Endpoints",endPointKey,0)))
                                 .toList()
                 );
                 role.setTimeStamp(LocalDateTime.now());
@@ -58,10 +58,10 @@ public class RoleServiceImpl implements RoleService
         try{
             Role role = roleRepository.findByRoleIdAndStatusIsTrue(roleId).orElseThrow(()->new ResourceNotFoundException("Role","roleId",roleId));
             BeanUtils.copyProperties(roleRequestDto,role);
-            role.setPermissions(
-                    roleRequestDto.getPermissions()
+            role.setEndpoints(
+                    roleRequestDto.getEndpoints()
                             .stream()
-                            .map((permissionType)->permissionRepository.findByPermissionType(permissionType))
+                            .map((endPointKey)-> endpointRepository.findById(endPointKey).orElseThrow(()->new ResourceNotFoundException("Endpoints",endPointKey,0)))
                             .toList()
             );
             role.setTimeStamp(LocalDateTime.now());
@@ -110,11 +110,8 @@ public class RoleServiceImpl implements RoleService
     {
         RoleResponseDto roleResponseDto = new RoleResponseDto();
         BeanUtils.copyProperties(role,roleResponseDto);
-        roleResponseDto.setPermissions(
-                role.getPermissions()
-                        .stream()
-                        .map(Permission::getPermissionType)
-                        .toList()
+        roleResponseDto.setEndpoints(
+                role.getEndpoints().stream().map(Endpoint::getEndPointLink).toList()
         );
         roleResponseDto.setTimeStamp(role.getTimeStamp());
         return roleResponseDto;

@@ -20,7 +20,6 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 
 @Service
 @AllArgsConstructor(onConstructor_ = {@Autowired})
@@ -33,23 +32,8 @@ public class PermissionServiceImpl implements PermissionService
     {
         try
         {
-            Permission permission = permissionRepository.findByPermissionType(permissionRequestDto.getPermissionType());
-            if(Objects.isNull(permission))
-            {
-                permission = new Permission();
-                BeanUtils.copyProperties(permissionRequestDto,permission);
-                permission.setEndPoints(
-                        permissionRequestDto.getEndPoints()
-                                .stream()
-                                .map((endPointKey)-> endpointRepository.findById(endPointKey).orElseThrow(()->new ResourceNotFoundException("Endpoints",endPointKey,0)))
-                                .toList()
-                );
-                permission.setTimeStamp(LocalDateTime.now());
-                permissionRepository.save(permission);
-                return ResponseEntity.status(HttpStatus.OK).body(new ApiResponse("New permission created successfully!",true));
-            }else {
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ApiResponse(permissionRequestDto.getPermissionType() + " Role already exist!", false));
-            }
+            permissionRepository.save(permissionRequestDtoToPermission(permissionRequestDto));
+            return ResponseEntity.status(HttpStatus.CREATED).body(new ApiResponse("New permission created successfully!",false));
         }catch (Exception e)
         {
             throw new RuntimeException("Error occurred while creating new permission, Reason: "+e.getMessage());
@@ -126,12 +110,18 @@ public class PermissionServiceImpl implements PermissionService
     public Permission permissionRequestDtoToPermission(PermissionRequestDto permissionRequestDto)
     {
         Permission permission = permissionRepository.findByPermissionType(permissionRequestDto.getPermissionType());
-        if (permission != null) {
-            return permission;
-        } else {
-            throw new ResourceNotFoundException("Permission", "permissionName:" + permissionRequestDto.getPermissionType(), 0);
+        if(permission==null) {
+            permission = new Permission();
+            BeanUtils.copyProperties(permissionRequestDto, permission);
+            permission.setEndPoints(
+                    permissionRequestDto.getEndPoints()
+                            .stream()
+                            .map((endPointKey) -> endpointRepository.findById(endPointKey).orElseThrow(() -> new ResourceNotFoundException("Endpoints", endPointKey, 0)))
+                            .toList()
+            );
+            permission.setTimeStamp(LocalDateTime.now());
         }
-
+        return permission;
     }
     public PermissionResponseDto permissionToPermissionResponseDto(Permission permission)
     {

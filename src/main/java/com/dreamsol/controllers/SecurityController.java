@@ -11,7 +11,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -44,24 +43,5 @@ public class SecurityController
     public ResponseEntity<?> reGenerateToken(@RequestParam String refreshToken)
     {
         return refreshTokenService.createTokenByRefreshToken(refreshToken);
-    }
-
-    @Operation(
-            summary = "Get all endpoints",
-            description = "This will help to get all endpoints"
-    )
-    @GetMapping("/get-endpoints")
-    public ResponseEntity<?> getAllEndpoints()
-    {
-        return securityService.getAllEndpoints();
-    }
-    @Operation(
-            summary = "Update endpoints",
-            description = "This will help to update endpoints"
-    )
-    @PutMapping("/update-endpoints")
-    public ResponseEntity<?> updateEndpoints()
-    {
-        return securityService.updateEndpoints();
     }
 }

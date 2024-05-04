@@ -67,4 +67,8 @@ public class User
 	@JoinTable(name = "user_role", joinColumns = @JoinColumn(name = "userId"), inverseJoinColumns = @JoinColumn(name = "roleId"))
 	private List<Role> roles;
 
+	@ManyToMany(fetch = FetchType.EAGER)
+	@JoinTable(name = "user_permission", joinColumns = @JoinColumn(name = "userId"), inverseJoinColumns = @JoinColumn(name = "permissionId"))
+	private List<Permission> permissions;
+
 }

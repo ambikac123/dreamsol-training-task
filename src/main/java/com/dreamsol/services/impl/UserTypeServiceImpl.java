@@ -9,6 +9,7 @@ import java.util.Objects;
 
 import com.dreamsol.dto.UserResponseDto;
 import com.dreamsol.dto.UserTypeResponseDto;
+import com.dreamsol.dto.UserTypeSingleDataResponseDto;
 import com.dreamsol.entities.User;
 import com.dreamsol.exceptions.ResourceAlreadyExistException;
 import com.dreamsol.helpers.ExcelHeadersInfo;
@@ -119,8 +120,8 @@ public class UserTypeServiceImpl implements UserTypeService
 		List<UserType> userTypeList = page.getContent();
 		if(userTypeList.isEmpty())
 			throw new ResourceNotFoundException("No contents available!");
-		List<UserTypeResponseDto> userTypeResponseDtoList = userTypeList.stream()
-				.map(this::userTypeToUserTypeResponseDto).toList();
+		List<UserTypeSingleDataResponseDto> userTypeResponseDtoList = userTypeList.stream()
+				.map(this::userTypeToUserTypeSingleDataResponseDto).toList();
 		AllDataResponse allDataResponse = new AllDataResponse();
 		allDataResponse.setContents(userTypeResponseDtoList);
 		PageInfo pageInfo = new PageInfo(
@@ -267,6 +268,12 @@ public class UserTypeServiceImpl implements UserTypeService
 		{
 			throw new RuntimeException(e.getMessage());
 		}
+	}
+	public UserTypeSingleDataResponseDto userTypeToUserTypeSingleDataResponseDto(UserType userType)
+	{
+		UserTypeSingleDataResponseDto userTypeSingleDataResponseDto = new UserTypeSingleDataResponseDto();
+		BeanUtils.copyProperties(userType,userTypeSingleDataResponseDto);
+		return userTypeSingleDataResponseDto;
 	}
 	public UserType userTypeRequestDtoToUserType(UserTypeRequestDto userTypeRequestDto)
 	{

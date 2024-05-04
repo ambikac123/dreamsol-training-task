@@ -1,10 +1,6 @@
 package com.dreamsol.services.impl;
 
-import com.dreamsol.dto.EndpointResponseDto;
-import com.dreamsol.entities.Endpoint;
 import com.dreamsol.entities.RefreshToken;
-import com.dreamsol.helpers.EndpointMappingsHelper;
-import com.dreamsol.repositories.EndpointRepository;
 import com.dreamsol.response.ApiResponse;
 import com.dreamsol.securities.JwtHelper;
 import com.dreamsol.securities.LoginRequest;
@@ -23,9 +19,6 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
-import java.util.Map;
-
 @Service
 @AllArgsConstructor(onConstructor_ = {@Autowired})
 public class SecurityServiceImpl implements SecurityService
@@ -33,8 +26,6 @@ public class SecurityServiceImpl implements SecurityService
     private AuthenticationManager authenticationManager;
     private JwtHelper jwtHelper;
     private RefreshTokenService refreshTokenService;
-    private EndpointRepository endpointRepository;
-    private EndpointMappingsHelper endpointMappingsHelper;
     private Authentication authenticateUsernameAndPassword(String username, String password)
     {
         UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(username,password);
@@ -54,7 +45,7 @@ public class SecurityServiceImpl implements SecurityService
             SecurityContextHolder.getContext().setAuthentication(authentication);
             UserDetails userDetails = (UserDetails) authentication.getPrincipal();
             String accessToken = jwtHelper.generateToken(userDetails);
-            RefreshToken refreshToken = refreshTokenService.createRefreshToken(userDetails.getUsername());
+            RefreshToken refreshToken = refreshTokenService.createRefreshToken(userDetails);
             LoginResponse loginResponse = LoginResponse.builder()
                     .accessToken(accessToken)
                     .refreshToken(refreshToken.getRefreshToken())
@@ -63,29 +54,5 @@ public class SecurityServiceImpl implements SecurityService
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ApiResponse("Login Error: " + e.getMessage(), false));
         }
-    }
-
-    @Override
-    public ResponseEntity<?> getAllEndpoints()
-    {
-        List<EndpointResponseDto> endpointResponseDtoList = endpointRepository.findAll()
-                .stream()
-                .map((endpointMappings -> new EndpointResponseDto(endpointMappings.getEndPointKey(), endpointMappings.getEndPointLink())))
-                .toList();
-        return ResponseEntity.status(HttpStatus.OK).body(endpointResponseDtoList);
-    }
-
-    @Override
-    public ResponseEntity<?> updateEndpoints()
-    {
-        int count = 0;
-        Map<String,String> endpointMap = endpointMappingsHelper.getEndpointMap();
-        for(Map.Entry<String,String> endpoint : endpointMap.entrySet())
-        {
-            Endpoint endpointMappings = new Endpoint(endpoint.getKey(),endpoint.getValue());
-            endpointRepository.save(endpointMappings);
-            count++;
-        }
-        return ResponseEntity.status(HttpStatus.OK).body(new ApiResponse(count+" endpoints updated!",true));
     }
 }

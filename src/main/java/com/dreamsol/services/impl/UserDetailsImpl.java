@@ -1,6 +1,5 @@
 package com.dreamsol.services.impl;
 
-import com.dreamsol.entities.Permission;
 import com.dreamsol.entities.Role;
 import com.dreamsol.entities.User;
 import lombok.Getter;

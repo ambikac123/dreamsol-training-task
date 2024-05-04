@@ -12,7 +12,7 @@ public class RoleResponseDto
 {
     private String roleType;
 
-    private List<String> permissions;
+    private List<String> endpoints;
 
     private boolean status;
 

@@ -15,6 +15,7 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
@@ -38,7 +39,9 @@ public class SecurityConfig
             "/api/login",
             "/api/re-generate-token",
             "/api/update-endpoints",
-            "/api/get-endpoints"
+            "/api/get-endpoints",
+            "/api/get-role-endpoints",
+            "/api/get-permission-endpoints"
     };
 
     @Bean
@@ -74,8 +77,13 @@ public class SecurityConfig
     public AuthorizationManager<RequestAuthorizationContext> customAuthorizationManager() {
         return (supplier, object) -> {
             Authentication authentication = supplier.get();
-            if(!authentication.isAuthenticated())
-                throw new RuntimeException("User not authenticated!");
+            if(authentication.getPrincipal().equals("anonymousUser"))
+                throw new AuthenticationException("User not authenticated!") {
+                    @Override
+                    public String getMessage() {
+                        return super.getMessage();
+                    }
+                };
             UserDetailsImpl userDetailsImpl = (UserDetailsImpl) authentication.getPrincipal();
             String[] patterns = roleAndPermissionHelper.getUserRelatedUrls(userDetailsImpl.getUser());
             AntPathMatcher matcher = new AntPathMatcher("/");

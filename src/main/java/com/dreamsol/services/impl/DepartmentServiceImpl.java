@@ -9,6 +9,7 @@ import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import com.dreamsol.dto.DepartmentSingleDataResponseDto;
 import com.dreamsol.dto.UserResponseDto;
 import com.dreamsol.entities.User;
 import com.dreamsol.helpers.ExcelHeadersInfo;
@@ -23,7 +24,6 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.core.io.Resource;
-import org.springframework.dao.DataAccessException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -128,7 +128,7 @@ public class DepartmentServiceImpl implements DepartmentService
 		List<Department> departmentList = page.getContent();
 		if(departmentList.isEmpty())
 			throw new ResourceNotFoundException("No contents available!");
-		List<DepartmentResponseDto> departmentResponseDtoList = departmentList.stream().map(this::departmentToDepartmentResponseDto).toList();
+		List<DepartmentSingleDataResponseDto> departmentResponseDtoList = departmentList.stream().map(this::departmentToDepartmentSingleDataResponseDto).toList();
 		AllDataResponse allDataResponse = new AllDataResponse();
 		allDataResponse.setContents(departmentResponseDtoList);
 		PageInfo pageInfo = new PageInfo(
@@ -299,6 +299,12 @@ public class DepartmentServiceImpl implements DepartmentService
 				.toList();
 		departmentResponseDto.setUsers(userResponseDtoList);
 		return departmentResponseDto;
+	}
+	public DepartmentSingleDataResponseDto departmentToDepartmentSingleDataResponseDto(Department department)
+	{
+		DepartmentSingleDataResponseDto departmentSingleDataResponseDto = new DepartmentSingleDataResponseDto();
+		BeanUtils.copyProperties(department,departmentSingleDataResponseDto);
+		return departmentSingleDataResponseDto;
 	}
 	public boolean isDepartmentExist(DepartmentRequestDto departmentRequestDto)
 	{
